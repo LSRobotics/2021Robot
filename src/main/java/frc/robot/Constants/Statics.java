@@ -18,7 +18,7 @@ public class Statics {
     public static double stickDeadzone = 0.1;
 
     public static double intakeSpeed = .35;
-    public static double shooterSpeed = 1;
+    public static double shooterSpeed = .95;
     
     //Change the "COMPETITION_1" in the next line to whichever competition you need to run.
     static final public CompetitionSelection current_competition = CompetitionSelection.COMPETITION_1;

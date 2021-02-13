@@ -16,12 +16,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 
+//importing stuff for sensors
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SPI.Port;
 
 import frc.robot.Constants.Statics;
-import frc.robot.Constants.Statics.CompetitionSelection;
 
 import java.util.ArrayList;
 
@@ -31,6 +31,13 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+
+
+
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.cscore.VideoSink;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -52,13 +59,15 @@ public class Robot extends TimedRobot {
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
   public WPI_TalonFX shooter;
-  public VictorSPX vic5;
-  public VictorSPX vic6;
-  public VictorSPX vic7;
-  public VictorSPX vic8;
+  public VictorSPX intakeTop;
+  public VictorSPX intakeBottom;
+  public VictorSPX intakeToShooter;
+  public VictorSPX intakeFront;
   public XboxController gp;
 
-  public AHRS ahrs;
+  public AHRS navx;
+
+  //public Pixy2 pixycam;
 
 
 
@@ -76,10 +85,10 @@ public class Robot extends TimedRobot {
     gp = new XboxController(0);
 
     shooter = new WPI_TalonFX(9);
-    vic5 = new VictorSPX(5);
-    vic6 = new VictorSPX(6);
-    vic7 = new VictorSPX(7);
-    vic8 = new VictorSPX(8);
+    intakeTop = new VictorSPX(5);
+    intakeBottom = new VictorSPX(6);
+    intakeToShooter = new VictorSPX(7);
+    intakeFront = new VictorSPX(8);
 
     
     front_left = new TalonFX(Statics.Wheel_FrontLeft);
@@ -90,7 +99,8 @@ public class Robot extends TimedRobot {
     back_right.follow(front_right);
     back_left.follow(front_left);
 
-    ahrs = new AHRS(SPI.Port.kMXP);
+    navx = new AHRS(SPI.Port.kMXP);
+    //pixycam = Pixy2.createInstance(new I2cLink());
     
 
 
@@ -172,7 +182,7 @@ public class Robot extends TimedRobot {
   }
 
   /**
-   * This function is called periodically during operator control.
+   * This function is called periodically during operator control.e
    */
   @Override
   public void teleopPeriodic() {
@@ -211,7 +221,7 @@ public class Robot extends TimedRobot {
 
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
 
-    shoot(-Statics.shooterSpeed * toInt(gp.getBButton()));
+    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
 
   }
 
@@ -257,17 +267,17 @@ public class Robot extends TimedRobot {
   public void shoot(double speed) {
 
   
-    shooter.set(speed);
+    shooter.set(-speed);
 
 
   }
 
   public void intake(double speed) {
 
-    vic5.set(ControlMode.PercentOutput, -speed);
-    vic6.set(ControlMode.PercentOutput, -speed);
-    vic7.set(ControlMode.PercentOutput, speed);
-    vic8.set(ControlMode.PercentOutput, -speed);
+    intakeTop.set(ControlMode.PercentOutput, -speed);
+    intakeBottom.set(ControlMode.PercentOutput, -speed);
+    intakeToShooter.set(ControlMode.PercentOutput, speed);
+    intakeFront.set(ControlMode.PercentOutput, -speed);
 
   }
 
