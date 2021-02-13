@@ -15,6 +15,13 @@ public class Statics {
     public static int Wheel_FrontRight = 3;
     public static int Wheel_BackRight = 4;
 
+    public static int intake_front = 8;
+    public static int intake_toShooter = 7;
+    public static int intake_bottom = 6;
+    public static int intake_top = 5;
+
+    public static int shooter = 9;
+
     public static double stickDeadzone = 0.1;
 
     public static double intakeSpeed = .35;

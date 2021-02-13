@@ -84,11 +84,11 @@ public class Robot extends TimedRobot {
 
     gp = new XboxController(0);
 
-    shooter = new WPI_TalonFX(9);
-    intakeTop = new VictorSPX(5);
-    intakeBottom = new VictorSPX(6);
-    intakeToShooter = new VictorSPX(7);
-    intakeFront = new VictorSPX(8);
+    shooter = new WPI_TalonFX(Statics.shooter);
+    intakeTop = new VictorSPX(Statics.intake_top);
+    intakeBottom = new VictorSPX(Statics.intake_bottom);
+    intakeToShooter = new VictorSPX(Statics.intake_toShooter);
+    intakeFront = new VictorSPX(Statics.intake_front);
 
     
     front_left = new TalonFX(Statics.Wheel_FrontLeft);
