@@ -14,11 +14,14 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 
 import frc.robot.Constants.Statics;
 import frc.robot.Constants.Statics.CompetitionSelection;
 
 import java.util.ArrayList;
+
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
@@ -41,7 +44,6 @@ public class Robot extends TimedRobot {
   TalonFX front_right;
   TalonFX back_left;
   TalonFX back_right;
-  XboxController controller;
   DifferentialDrive drive;
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
@@ -50,6 +52,7 @@ public class Robot extends TimedRobot {
   public VictorSPX vic6;
   public VictorSPX vic7;
   public VictorSPX vic8;
+  public XboxController gp;
 
 
 
@@ -64,6 +67,8 @@ public class Robot extends TimedRobot {
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
 
+    gp = new XboxController(0);
+
     shooter = new WPI_TalonFX(9);
     vic5 = new VictorSPX(5);
     vic6 = new VictorSPX(6);
@@ -75,8 +80,7 @@ public class Robot extends TimedRobot {
     back_left = new TalonFX(Statics.Wheel_BackLeft);
     front_right = new TalonFX(Statics.Wheel_FrontRight);
     back_right = new TalonFX(Statics.Wheel_BackRight);
-    controller = new XboxController(1);
-    
+
     back_right.follow(front_right);
     back_left.follow(front_left);
     
@@ -116,9 +120,6 @@ public class Robot extends TimedRobot {
       break;
 
     }
-    front_left.set(ControlMode.Current, controller.getY());
-    front_right.set(ControlMode.Current, controller.getY());
-
   }
 
   /**
@@ -198,9 +199,11 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
-    Move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
+    move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
 
-    Intake(Statics.shooterSpeed * gp.GetAButton());
+    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
+
+    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
 
   }
 
@@ -222,18 +225,18 @@ public class Robot extends TimedRobot {
 
 
 
-  public void Move(double leftThrottle, double rightThrottle) {
+  public void move(double leftThrottle, double rightThrottle) {
 
 
     //instead of checking for both the positive and the negative versions, just take the absolute value so you only have to check once
-    if(abs(rightThrottle) >= Statics.stickDeadzone){
+    if(Math.abs(rightThrottle) >= Statics.stickDeadzone){
       front_right.set(ControlMode.PercentOutput, rightThrottle);
     }
     else {
       front_right.set(ControlMode.PercentOutput, 0);
     }
 
-    if(abs(leftThrottle) >= Statics.stickDeadzone){
+    if(Math.abs(leftThrottle) >= Statics.stickDeadzone){
       front_left.set(ControlMode.PercentOutput, -leftThrottle);
     }
     else {
@@ -243,7 +246,7 @@ public class Robot extends TimedRobot {
 
   }
 
-  public void Shooter(double speed) {
+  public void shoot(double speed) {
 
   
     shooter.set(speed);
@@ -251,13 +254,17 @@ public class Robot extends TimedRobot {
 
   }
 
-  public void Intake(double speed) {
+  public void intake(double speed) {
 
     vic5.set(ControlMode.PercentOutput, -speed);
     vic6.set(ControlMode.PercentOutput, -speed);
     vic7.set(ControlMode.PercentOutput, speed);
     vic8.set(ControlMode.PercentOutput, -speed);
 
+  }
+
+  public int toInt(boolean condition) {
+    return condition ? 1 : 0;
   }
 
 }

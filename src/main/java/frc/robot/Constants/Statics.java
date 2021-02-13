@@ -10,6 +10,16 @@ public class Statics {
     public enum CompetitionSelection{
         COMPETITION_1, COMPETITION_2, COMPETITION_3, COMPETITION_4, COMPETITION_5
     }
+    public static int Wheel_FrontLeft = 1;
+    public static int Wheel_BackLeft = 2;
+    public static int Wheel_FrontRight = 3;
+    public static int Wheel_BackRight = 4;
+
+    public static double stickDeadzone = 0.1;
+
+    public static double intakeSpeed = .35;
+    public static double shooterSpeed = -1;
+    
     //Change the "COMPETITION_1" in the next line to whichever competition you need to run.
     static final public CompetitionSelection current_competition = CompetitionSelection.COMPETITION_1;
 
