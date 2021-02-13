@@ -16,6 +16,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 
+import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SPI.Port;
+
 import frc.robot.Constants.Statics;
 import frc.robot.Constants.Statics.CompetitionSelection;
 
@@ -54,6 +58,8 @@ public class Robot extends TimedRobot {
   public VictorSPX vic8;
   public XboxController gp;
 
+  public AHRS ahrs;
+
 
 
 
@@ -83,6 +89,8 @@ public class Robot extends TimedRobot {
 
     back_right.follow(front_right);
     back_left.follow(front_left);
+
+    ahrs = new AHRS(SPI.Port.kMXP);
     
 
 
