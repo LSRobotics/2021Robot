@@ -203,7 +203,7 @@ public class Robot extends TimedRobot {
 
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
 
-    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
+    shoot(-Statics.shooterSpeed * toInt(gp.getBButton()));
 
   }
 
