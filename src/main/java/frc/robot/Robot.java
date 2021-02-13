@@ -45,6 +45,12 @@ public class Robot extends TimedRobot {
   DifferentialDrive drive;
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
+  public WPI_TalonFX shooter;
+  public VictorSPX vic5;
+  public VictorSPX vic6;
+  public VictorSPX vic7;
+  public VictorSPX vic8;
+
 
 
 
@@ -57,14 +63,23 @@ public class Robot extends TimedRobot {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
-    front_left = new TalonFX(1);
-    back_left = new TalonFX(2);
-    front_right = new TalonFX(3);
-    back_right = new TalonFX(4);
+
+    shooter = new WPI_TalonFX(9);
+    vic5 = new VictorSPX(5);
+    vic6 = new VictorSPX(6);
+    vic7 = new VictorSPX(7);
+    vic8 = new VictorSPX(8);
+
+    
+    front_left = new TalonFX(Statics.Wheel_FrontLeft);
+    back_left = new TalonFX(Statics.Wheel_BackLeft);
+    front_right = new TalonFX(Statics.Wheel_FrontRight);
+    back_right = new TalonFX(Statics.Wheel_BackRight);
     controller = new XboxController(1);
     
     back_right.follow(front_right);
     back_left.follow(front_left);
+    
 
 
   }
@@ -182,6 +197,11 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void testPeriodic() {
+
+    Move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
+
+    Intake(Statics.shooterSpeed * gp.GetAButton());
+
   }
 
   public void competition1Periodic(){
@@ -199,4 +219,45 @@ public class Robot extends TimedRobot {
   public void competition5Periodic(){
     
   }
+
+
+
+  public void Move(double leftThrottle, double rightThrottle) {
+
+
+    //instead of checking for both the positive and the negative versions, just take the absolute value so you only have to check once
+    if(abs(rightThrottle) >= Statics.stickDeadzone){
+      front_right.set(ControlMode.PercentOutput, rightThrottle);
+    }
+    else {
+      front_right.set(ControlMode.PercentOutput, 0);
+    }
+
+    if(abs(leftThrottle) >= Statics.stickDeadzone){
+      front_left.set(ControlMode.PercentOutput, -leftThrottle);
+    }
+    else {
+      front_left.set(ControlMode.PercentOutput, 0);
+    }
+
+
+  }
+
+  public void Shooter(double speed) {
+
+  
+    shooter.set(speed);
+
+
+  }
+
+  public void Intake(double speed) {
+
+    vic5.set(ControlMode.PercentOutput, -speed);
+    vic6.set(ControlMode.PercentOutput, -speed);
+    vic7.set(ControlMode.PercentOutput, speed);
+    vic8.set(ControlMode.PercentOutput, -speed);
+
+  }
+
 }
