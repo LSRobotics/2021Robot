@@ -32,6 +32,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
 
 
 import edu.wpi.first.cameraserver.CameraServer;
@@ -51,10 +52,10 @@ public class Robot extends TimedRobot {
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
-  TalonFX front_left;
-  TalonFX front_right;
-  TalonFX back_left;
-  TalonFX back_right;
+  WPI_TalonFX front_left;
+  WPI_TalonFX front_right;
+  WPI_TalonFX back_left;
+  WPI_TalonFX back_right;
   DifferentialDrive drive;
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
@@ -64,6 +65,7 @@ public class Robot extends TimedRobot {
   public VictorSPX intakeToShooter;
   public VictorSPX intakeFront;
   public XboxController gp;
+  public PowerDistributionPanel pdp;
 
   public AHRS navx;
 
@@ -90,11 +92,12 @@ public class Robot extends TimedRobot {
     intakeToShooter = new VictorSPX(Statics.intake_toShooter);
     intakeFront = new VictorSPX(Statics.intake_front);
 
+    pdp = new PowerDistributionPanel(0);
     
-    front_left = new TalonFX(Statics.Wheel_FrontLeft);
-    back_left = new TalonFX(Statics.Wheel_BackLeft);
-    front_right = new TalonFX(Statics.Wheel_FrontRight);
-    back_right = new TalonFX(Statics.Wheel_BackRight);
+    front_left = new WPI_TalonFX(Statics.Wheel_FrontLeft);
+    back_left = new WPI_TalonFX(Statics.Wheel_BackLeft);
+    front_right = new WPI_TalonFX(Statics.Wheel_FrontRight);
+    back_right = new WPI_TalonFX(Statics.Wheel_BackRight);
 
     back_right.follow(front_right);
     back_left.follow(front_left);
@@ -222,6 +225,8 @@ public class Robot extends TimedRobot {
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
 
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
+    
+    diagnostics();
 
   }
 
@@ -284,5 +289,17 @@ public class Robot extends TimedRobot {
   public int toInt(boolean condition) {
     return condition ? 1 : 0;
   }
+
+  public void diagnostics() {
+
+    //SmartDashboard.putNumber("Drive Motor Left", front_right.get());
+    //SmartDashboard.putNumber("Drive Motor Right", front_left.get());
+
+    //SmartDashboard.putNumber("Intake Front", intakeFront.get());
+    
+    SmartDashboard.putNumber("Voltage", pdp.getVoltage());
+
+  }
+
 
 }
