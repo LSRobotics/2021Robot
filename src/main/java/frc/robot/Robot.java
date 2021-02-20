@@ -29,6 +29,13 @@ import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
+
+
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.cscore.VideoSink;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -42,10 +49,10 @@ public class Robot extends TimedRobot {
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
-  TalonFX front_left;
-  TalonFX front_right;
-  TalonFX back_left;
-  TalonFX back_right;
+  WPI_TalonFX front_left;
+  WPI_TalonFX front_right;
+  WPI_TalonFX back_left;
+  WPI_TalonFX back_right;
   DifferentialDrive drive;
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
@@ -55,6 +62,7 @@ public class Robot extends TimedRobot {
   public VictorSPX vic7;
   public VictorSPX vic8;
   public XboxController gp;
+  public PowerDistributionPanel pdp;
 
   //sensors
   AnalogInput maxbotixFront_US;
@@ -80,11 +88,12 @@ public class Robot extends TimedRobot {
     vic7 = new VictorSPX(7);
     vic8 = new VictorSPX(8);
 
+    pdp = new PowerDistributionPanel(0);
     
-    front_left = new TalonFX(Statics.Wheel_FrontLeft);
-    back_left = new TalonFX(Statics.Wheel_BackLeft);
-    front_right = new TalonFX(Statics.Wheel_FrontRight);
-    back_right = new TalonFX(Statics.Wheel_BackRight);
+    front_left = new WPI_TalonFX(Statics.Wheel_FrontLeft);
+    back_left = new WPI_TalonFX(Statics.Wheel_BackLeft);
+    front_right = new WPI_TalonFX(Statics.Wheel_FrontRight);
+    back_right = new WPI_TalonFX(Statics.Wheel_BackRight);
 
     back_right.follow(front_right);
     back_left.follow(front_left);
@@ -210,6 +219,8 @@ public class Robot extends TimedRobot {
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
 
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
+    
+    diagnostics();
 
   }
 
@@ -278,5 +289,17 @@ public class Robot extends TimedRobot {
   public double getRangeInches(double rawVoltage){
     return rawVoltage * Statics.cm_to_in;
   }
+
+  public void diagnostics() {
+
+    //SmartDashboard.putNumber("Drive Motor Left", front_right.get());
+    //SmartDashboard.putNumber("Drive Motor Right", front_left.get());
+
+    //SmartDashboard.putNumber("Intake Front", intakeFront.get());
+    
+    SmartDashboard.putNumber("Voltage", pdp.getVoltage());
+
+  }
+
 
 }
