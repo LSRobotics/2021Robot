@@ -16,12 +16,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 
-//importing stuff for sensors
-import com.kauailabs.navx.frc.AHRS;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.SPI.Port;
-
 import frc.robot.Constants.Statics;
+import frc.robot.Constants.Statics.CompetitionSelection;
 
 import java.util.ArrayList;
 
@@ -32,12 +28,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-
-
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.cscore.UsbCamera;
-import edu.wpi.cscore.VideoSink;
-
+import edu.wpi.first.wpilibj.AnalogInput;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -59,15 +50,14 @@ public class Robot extends TimedRobot {
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
   public WPI_TalonFX shooter;
-  public VictorSPX intakeTop;
-  public VictorSPX intakeBottom;
-  public VictorSPX intakeToShooter;
-  public VictorSPX intakeFront;
+  public VictorSPX vic5;
+  public VictorSPX vic6;
+  public VictorSPX vic7;
+  public VictorSPX vic8;
   public XboxController gp;
 
-  public AHRS navx;
-
-  //public Pixy2 pixycam;
+  //sensors
+  AnalogInput maxbotixFront_US;
 
 
 
@@ -84,11 +74,11 @@ public class Robot extends TimedRobot {
 
     gp = new XboxController(0);
 
-    shooter = new WPI_TalonFX(Statics.shooter);
-    intakeTop = new VictorSPX(Statics.intake_top);
-    intakeBottom = new VictorSPX(Statics.intake_bottom);
-    intakeToShooter = new VictorSPX(Statics.intake_toShooter);
-    intakeFront = new VictorSPX(Statics.intake_front);
+    shooter = new WPI_TalonFX(9);
+    vic5 = new VictorSPX(5);
+    vic6 = new VictorSPX(6);
+    vic7 = new VictorSPX(7);
+    vic8 = new VictorSPX(8);
 
     
     front_left = new TalonFX(Statics.Wheel_FrontLeft);
@@ -98,10 +88,8 @@ public class Robot extends TimedRobot {
 
     back_right.follow(front_right);
     back_left.follow(front_left);
-
-    navx = new AHRS(SPI.Port.kMXP);
-    //pixycam = Pixy2.createInstance(new I2cLink());
     
+    maxbotixFront_US = new AnalogInput(US_Maxbotix_Front);
 
 
   }
@@ -182,7 +170,7 @@ public class Robot extends TimedRobot {
   }
 
   /**
-   * This function is called periodically during operator control.e
+   * This function is called periodically during operator control.
    */
   @Override
   public void teleopPeriodic() {
@@ -267,22 +255,28 @@ public class Robot extends TimedRobot {
   public void shoot(double speed) {
 
   
-    shooter.set(-speed);
+    shooter.set(speed);
 
 
   }
 
   public void intake(double speed) {
 
-    intakeTop.set(ControlMode.PercentOutput, -speed);
-    intakeBottom.set(ControlMode.PercentOutput, -speed);
-    intakeToShooter.set(ControlMode.PercentOutput, speed);
-    intakeFront.set(ControlMode.PercentOutput, -speed);
+    vic5.set(ControlMode.PercentOutput, -speed);
+    vic6.set(ControlMode.PercentOutput, -speed);
+    vic7.set(ControlMode.PercentOutput, speed);
+    vic8.set(ControlMode.PercentOutput, -speed);
 
   }
 
   public int toInt(boolean condition) {
     return condition ? 1 : 0;
+  }
+
+  //function to convert voltage recieved from maxbotix ultrasonic sensor to a distance in inches
+  //example: getRangeInches(maxbotixFront_US.getValue());
+  public double getRangeInches(double rawVoltage){
+    return rawVoltage * Statics.cm_to_in;
   }
 
 }
