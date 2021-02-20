@@ -57,10 +57,10 @@ public class Robot extends TimedRobot {
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
   public WPI_TalonFX shooter;
-  public VictorSPX vic5;
-  public VictorSPX vic6;
-  public VictorSPX vic7;
-  public VictorSPX vic8;
+  public VictorSPX intakeTop;
+  public VictorSPX intakeBottom;
+  public VictorSPX intakeToShooter;
+  public VictorSPX intakeFront;
   public XboxController gp;
   public PowerDistributionPanel pdp;
 
@@ -83,10 +83,10 @@ public class Robot extends TimedRobot {
     gp = new XboxController(0);
 
     shooter = new WPI_TalonFX(9);
-    vic5 = new VictorSPX(5);
-    vic6 = new VictorSPX(6);
-    vic7 = new VictorSPX(7);
-    vic8 = new VictorSPX(8);
+    intakeTop = new VictorSPX(5);
+    intakeBottom = new VictorSPX(6);
+    intakeToShooter = new VictorSPX(7);
+    intakeFront = new VictorSPX(8);
 
     pdp = new PowerDistributionPanel(0);
     
@@ -98,7 +98,7 @@ public class Robot extends TimedRobot {
     back_right.follow(front_right);
     back_left.follow(front_left);
     
-    maxbotixFront_US = new AnalogInput(US_Maxbotix_Front);
+    maxbotixFront_US = new AnalogInput(Statics.US_Maxbotix_Front);
 
 
   }
@@ -273,10 +273,10 @@ public class Robot extends TimedRobot {
 
   public void intake(double speed) {
 
-    vic5.set(ControlMode.PercentOutput, -speed);
-    vic6.set(ControlMode.PercentOutput, -speed);
-    vic7.set(ControlMode.PercentOutput, speed);
-    vic8.set(ControlMode.PercentOutput, -speed);
+    intakeTop.set(ControlMode.PercentOutput, -speed);
+    intakeBottom.set(ControlMode.PercentOutput, -speed);
+    intakeToShooter.set(ControlMode.PercentOutput, speed);
+    intakeFront.set(ControlMode.PercentOutput, -speed);
 
   }
 
@@ -295,10 +295,11 @@ public class Robot extends TimedRobot {
     //SmartDashboard.putNumber("Drive Motor Left", front_right.get());
     //SmartDashboard.putNumber("Drive Motor Right", front_left.get());
 
-    //SmartDashboard.putNumber("Intake Front", intakeFront.get());
+    SmartDashboard.putNumber("Intake Front", intakeFront.getSelectedSensorVelocity());
     
     SmartDashboard.putNumber("Voltage", pdp.getVoltage());
 
+    SmartDashboard.putNumber("Ultrasonic Distance", getRangeInches(maxbotixFront_US.getValue()));
   }
 
 
