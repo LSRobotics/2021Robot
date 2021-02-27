@@ -26,6 +26,10 @@ public class Statics {
 
     public static double intakeSpeed = .35;
     public static double shooterSpeed = .95;
+
+    public static int US_Maxbotix_Front = 3;
+
+    public static double cm_to_in = 0.049212598;
     
     //Change the "COMPETITION_1" in the next line to whichever competition you need to run.
     static final public CompetitionSelection current_competition = CompetitionSelection.COMPETITION_1;
