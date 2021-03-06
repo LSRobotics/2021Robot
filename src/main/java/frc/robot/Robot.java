@@ -68,8 +68,7 @@ public class Robot extends TimedRobot {
   public VictorSPX intakeToShooter;
   public VictorSPX intakeFront;
   public XboxController gp;
-  public PowerDistributionPanel pdp;
-  public 
+  public PowerDistributionPanel pdp; 
   
 
   DigitalInput limitSwitch;
