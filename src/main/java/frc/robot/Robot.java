@@ -59,6 +59,7 @@ public class Robot extends TimedRobot {
   WPI_TalonFX front_right;
   WPI_TalonFX back_left;
   WPI_TalonFX back_right;
+  WPI_TalonFX climb;
   DifferentialDrive drive;
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
@@ -99,14 +100,16 @@ public class Robot extends TimedRobot {
     gp = new XboxController(0);
 
     shooter = new WPI_TalonFX(Statics.shooter);
+    climb = new WPI_TalonFX(11);
     intakeTop = new VictorSPX(Statics.intake_top);
     intakeBottom = new VictorSPX(Statics.intake_bottom);
     intakeToShooter = new VictorSPX(Statics.intake_toShooter);
     intakeFront = new VictorSPX(Statics.intake_front);
 
+
     pdp = new PowerDistributionPanel(0);
   
-    pdp.clearStickyFaults();
+    //pdp.clearStickyFaults();
     
     front_left = new WPI_TalonFX(Statics.Wheel_FrontLeft);
     back_left = new WPI_TalonFX(Statics.Wheel_BackLeft);
@@ -239,6 +242,10 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void testInit() {
+
+    
+    //mCompressor.setClosedLoopControl(true);
+
   }
 
   /**
@@ -246,6 +253,10 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void testPeriodic() {
+
+    mCompressor.start();
+
+    climb.set(ControlMode.PercentOutput, 0);    
 
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
 
