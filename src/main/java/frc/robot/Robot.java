@@ -243,8 +243,7 @@ public class Robot extends TimedRobot {
   @Override
   public void testInit() {
 
-    
-    //mCompressor.setClosedLoopControl(true);
+   
 
   }
 
@@ -254,8 +253,21 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
+    
+    //mCompressor.setClosedLoopControl(true);
+    System.out.println("Pressure Switch Value: "+ mCompressor.getPressureSwitchValue());
+    System.out.println("Enabled: "+ mCompressor.enabled());
+    System.out.println("Current: "+ mCompressor.getCompressorCurrent());
+    System.out.println("ClosedLoopCOntrol: "+ mCompressor.getClosedLoopControl());
+    System.out.println("6: "+ mCompressor.getCompressorCurrentTooHighFault());
+    System.out.println("5: "+ mCompressor.getCompressorCurrentTooHighStickyFault());
+    System.out.println("4: "+ mCompressor.getCompressorNotConnectedFault());
+    System.out.println("3: "+ mCompressor.getCompressorNotConnectedStickyFault());
+    System.out.println("2: "+ mCompressor.getCompressorShortedFault());
+    System.out.println("1: "+ mCompressor.getCompressorShortedStickyFault());
     mCompressor.start();
 
+    
     climb.set(ControlMode.PercentOutput, 0);    
 
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
