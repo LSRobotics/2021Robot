@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
-
 import frc.robot.Constants.Statics;
 import frc.robot.Constants.Statics.CompetitionSelection;
 
@@ -31,10 +30,17 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 
+import edu.wpi.first.wpilibj.DigitalInput;
+
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSink;
+
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.Compressor;
+
 
 
 /**
@@ -53,6 +59,7 @@ public class Robot extends TimedRobot {
   WPI_TalonFX front_right;
   WPI_TalonFX back_left;
   WPI_TalonFX back_right;
+  WPI_TalonFX climb;
   DifferentialDrive drive;
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
@@ -62,7 +69,17 @@ public class Robot extends TimedRobot {
   public VictorSPX intakeToShooter;
   public VictorSPX intakeFront;
   public XboxController gp;
-  public PowerDistributionPanel pdp;
+  public PowerDistributionPanel pdp; 
+  
+
+  DigitalInput limitSwitch;
+
+
+  public static Compressor mCompressor;
+
+  public static DoubleSolenoid pneumatic1;
+  public static DoubleSolenoid pneumatic2;
+  public static DoubleSolenoid pneumatic3;
 
   //sensors
   AnalogInput maxbotixFront_US;
@@ -82,24 +99,43 @@ public class Robot extends TimedRobot {
 
     gp = new XboxController(0);
 
-    shooter = new WPI_TalonFX(9);
-    intakeTop = new VictorSPX(5);
-    intakeBottom = new VictorSPX(6);
-    intakeToShooter = new VictorSPX(7);
-    intakeFront = new VictorSPX(8);
+    shooter = new WPI_TalonFX(Statics.shooter);
+    intakeTop = new VictorSPX(Statics.intake_top);
+    intakeBottom = new VictorSPX(Statics.intake_bottom);
+    intakeToShooter = new VictorSPX(Statics.intake_toShooter);
+    intakeFront = new VictorSPX(Statics.intake_front);
 
     pdp = new PowerDistributionPanel(0);
+  
+    pdp.clearStickyFaults();
     
     front_left = new WPI_TalonFX(Statics.Wheel_FrontLeft);
     back_left = new WPI_TalonFX(Statics.Wheel_BackLeft);
     front_right = new WPI_TalonFX(Statics.Wheel_FrontRight);
     back_right = new WPI_TalonFX(Statics.Wheel_BackRight);
 
+    climb = new WPI_TalonFX(11);
+
+    mCompressor = new Compressor(0);
+
+    
+    limitSwitch = new DigitalInput(1);
+
+
+    pneumatic1 = new DoubleSolenoid(Statics.pneumatic1_forward_channel, Statics.pneumatic1_back_channel);
+    pneumatic2 = new DoubleSolenoid(Statics.pneumatic2_forward_channel, Statics.pneumatic2_back_channel);
+    pneumatic3 = new DoubleSolenoid(Statics.pneumatic3_forward_channel, Statics.pneumatic3_back_channel);
+
+    shooter.configFactoryDefault();
+    front_left.configFactoryDefault();
+    back_left.configFactoryDefault();
+    front_right.configFactoryDefault();
+    back_right.configFactoryDefault();
+
     back_right.follow(front_right);
     back_left.follow(front_left);
     
     maxbotixFront_US = new AnalogInput(Statics.US_Maxbotix_Front);
-
 
   }
 
@@ -214,13 +250,27 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
+    mCompressor.start();
+
+    climb.set(ControlMode.PercentOutput, 0);
+
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
 
+    //intake(Statics.intakeSpeed * (toInt(gp.getAButton()) - toInt(gp.getXButton())));
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
 
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
     
     diagnostics();
+
+    if (gp.getXButton()) {
+
+      pneumatic1.set(DoubleSolenoid.Value.kForward);
+
+    }
+    else if (gp.getYButton()) {
+      pneumatic1.set(DoubleSolenoid.Value.kReverse);
+    }
 
   }
 
@@ -266,7 +316,7 @@ public class Robot extends TimedRobot {
   public void shoot(double speed) {
 
   
-    shooter.set(speed);
+    shooter.set(-speed);
 
 
   }
@@ -284,6 +334,8 @@ public class Robot extends TimedRobot {
     return condition ? 1 : 0;
   }
 
+  
+
   //function to convert voltage recieved from maxbotix ultrasonic sensor to a distance in inches
   //example: getRangeInches(maxbotixFront_US.getValue());
   public double getRangeInches(double rawVoltage){
@@ -292,14 +344,18 @@ public class Robot extends TimedRobot {
 
   public void diagnostics() {
 
-    //SmartDashboard.putNumber("Drive Motor Left", front_right.get());
-    //SmartDashboard.putNumber("Drive Motor Right", front_left.get());
+    SmartDashboard.putNumber("Drive Motor Left", front_right.get());
+    SmartDashboard.putNumber("Drive Motor Right", front_left.get());
 
     SmartDashboard.putNumber("Intake Front", intakeFront.getSelectedSensorVelocity());
-    
+
     SmartDashboard.putNumber("Voltage", pdp.getVoltage());
 
     SmartDashboard.putNumber("Ultrasonic Distance", getRangeInches(maxbotixFront_US.getValue()));
+    
+    SmartDashboard.putBoolean("Compressor Running", mCompressor.getPressureSwitchValue());
+    SmartDashboard.putBoolean("Compressor is Enabled", mCompressor.enabled());
+    SmartDashboard.putNumber("Compressor Current", mCompressor.getCompressorCurrent());
   }
 
 
