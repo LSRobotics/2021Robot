@@ -20,6 +20,8 @@ import frc.robot.Constants.Statics.CompetitionSelection;
 
 import java.util.ArrayList;
 
+import javax.lang.model.util.ElementScanner6;
+
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
@@ -253,7 +255,7 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
-    
+    /*
     //mCompressor.setClosedLoopControl(true);
     System.out.println("Pressure Switch Value: "+ mCompressor.getPressureSwitchValue());
     System.out.println("Enabled: "+ mCompressor.enabled());
@@ -266,9 +268,8 @@ public class Robot extends TimedRobot {
     System.out.println("2: "+ mCompressor.getCompressorShortedFault());
     System.out.println("1: "+ mCompressor.getCompressorShortedStickyFault());
     mCompressor.start();
+    */
 
-    
-    climb.set(ControlMode.PercentOutput, 0);    
 
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
 
@@ -277,6 +278,8 @@ public class Robot extends TimedRobot {
 
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
     
+    //climb(DPadToInt(gp.getPOV()));
+
     diagnostics();
 
     if (gp.getXButton()) {
@@ -332,9 +335,38 @@ public class Robot extends TimedRobot {
   public void shoot(double speed) {
 
   
-    shooter.set(speed);
+    shooter.set(-speed);
 
 
+  }
+
+  public int DPadToInt(int angle)
+  {
+    return angle / 45;
+    
+  }
+  public void climb(int direction)
+  {
+
+    if(direction == 0) //going up!
+    {
+      climb.set(-0.1);
+    }
+    else if(direction == 4) //going down :(
+    {
+      climb.set(0.1);
+    }
+   /* else if(null)
+    {
+      climb.set(0);
+    }*/
+    else
+    {
+      climb.set(0);
+    }
+    
+
+   SmartDashboard.putNumber("Direction", DPadToInt(gp.getPOV()));
   }
 
   public void intake(double speed) {
