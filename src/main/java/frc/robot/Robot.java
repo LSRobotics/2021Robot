@@ -59,6 +59,7 @@ public class Robot extends TimedRobot {
   WPI_TalonFX front_right;
   WPI_TalonFX back_left;
   WPI_TalonFX back_right;
+  WPI_TalonFX climb;
   DifferentialDrive drive;
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
@@ -112,6 +113,8 @@ public class Robot extends TimedRobot {
     back_left = new WPI_TalonFX(Statics.Wheel_BackLeft);
     front_right = new WPI_TalonFX(Statics.Wheel_FrontRight);
     back_right = new WPI_TalonFX(Statics.Wheel_BackRight);
+
+    climb = new WPI_TalonFX(11);
 
     mCompressor = new Compressor(0);
 
@@ -247,6 +250,10 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
+    mCompressor.start();
+
+    climb.set(ControlMode.PercentOutput, 0);
+
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
 
     //intake(Statics.intakeSpeed * (toInt(gp.getAButton()) - toInt(gp.getXButton())));
@@ -309,7 +316,7 @@ public class Robot extends TimedRobot {
   public void shoot(double speed) {
 
   
-    shooter.set(speed);
+    shooter.set(-speed);
 
 
   }
@@ -348,6 +355,7 @@ public class Robot extends TimedRobot {
     
     SmartDashboard.putBoolean("Compressor Running", mCompressor.getPressureSwitchValue());
     SmartDashboard.putBoolean("Compressor is Enabled", mCompressor.enabled());
+    SmartDashboard.putNumber("Compressor Current", mCompressor.getCompressorCurrent());
   }
 
 
