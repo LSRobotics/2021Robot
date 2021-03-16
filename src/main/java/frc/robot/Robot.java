@@ -256,7 +256,6 @@ public class Robot extends TimedRobot {
     
     //mCompressor.setClosedLoopControl(true);
     System.out.println("Pressure Switch Value: "+ mCompressor.getPressureSwitchValue());
-    System.out.println("Enabled: "+ mCompressor.enabled());
     System.out.println("Current: "+ mCompressor.getCompressorCurrent());
     System.out.println("ClosedLoopCOntrol: "+ mCompressor.getClosedLoopControl());
     System.out.println("6: "+ mCompressor.getCompressorCurrentTooHighFault());
