@@ -33,12 +33,12 @@ public class Statics {
 
     public static double cm_to_in = 0.049212598;
 
-    public static int pneumatic1_forward_channel = 0;
-    public static int pneumatic1_back_channel = 1;
-    public static int pneumatic2_forward_channel = 2;
-    public static int pneumatic2_back_channel = 3;
-    public static int pneumatic3_forward_channel = 4;
-    public static int pneumatic3_back_channel = 5;
+    public static int pneumatic_intake_forward_channel = 0;
+    public static int pneumatic_intake_backward_channel = 1;
+    public static int pneumatic_climb_ratchet_forward_channel = 2;
+    public static int pneumatic_climb_ratchet_backward_channel = 3;
+    public static int pneumatic_drive_train_gear_shift_forward_channel = 4;
+    public static int pneumatic_drive_train_gear_shift_backward_channel = 5;
     
     //Change the "COMPETITION_1" in the next line to whichever competition you need to run.
     static final public CompetitionSelection current_competition = CompetitionSelection.COMPETITION_1;

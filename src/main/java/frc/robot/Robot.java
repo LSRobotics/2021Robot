@@ -82,9 +82,9 @@ public class Robot extends TimedRobot {
 
   public static Compressor mCompressor;
 
-  public static DoubleSolenoid pneumatic1;
-  public static DoubleSolenoid pneumatic2;
-  public static DoubleSolenoid pneumatic3;
+  public static DoubleSolenoid pneumatic_intake;
+  public static DoubleSolenoid pneumatic_ratchet;
+  public static DoubleSolenoid pneumatic_drive_train_gear_shift;
 
   //sensors
   AnalogInput maxbotixFront_US;
@@ -113,8 +113,6 @@ public class Robot extends TimedRobot {
 
 
     pdp = new PowerDistributionPanel(0);
-  
-    //pdp.clearStickyFaults();
     
     front_left = new WPI_TalonFX(Statics.Wheel_FrontLeft);
     back_left = new WPI_TalonFX(Statics.Wheel_BackLeft);
@@ -127,9 +125,9 @@ public class Robot extends TimedRobot {
     limitSwitch = new DigitalInput(1);
 
 
-    pneumatic1 = new DoubleSolenoid(Statics.pneumatic1_forward_channel, Statics.pneumatic1_back_channel);
-    pneumatic2 = new DoubleSolenoid(Statics.pneumatic2_forward_channel, Statics.pneumatic2_back_channel);
-    pneumatic3 = new DoubleSolenoid(Statics.pneumatic3_forward_channel, Statics.pneumatic3_back_channel);
+    pneumatic_intake = new DoubleSolenoid(pneumatic_intake_forward_channel, pneumatic_intake_backward_channel);
+    pneumatic_ratchet = new DoubleSolenoid(pneumatic_climb_ratchet_forward_channel, pneumatic_climb_ratchet_backward_channel);
+    pneumatic_drive_train_gear_shift = new DoubleSolenoid(pneumatic_drive_train_gear_shift_forward_channel, pneumatic_drive_train_gear_shift_backward_channel);
 
     shooter.configFactoryDefault();
     front_left.configFactoryDefault();
@@ -262,22 +260,6 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
-    /*
-    //mCompressor.setClosedLoopControl(true);
-    System.out.println("Pressure Switch Value: "+ mCompressor.getPressureSwitchValue());
-    System.out.println("Enabled: "+ mCompressor.enabled());
-    System.out.println("Current: "+ mCompressor.getCompressorCurrent());
-    System.out.println("ClosedLoopCOntrol: "+ mCompressor.getClosedLoopControl());
-    System.out.println("6: "+ mCompressor.getCompressorCurrentTooHighFault());
-    System.out.println("5: "+ mCompressor.getCompressorCurrentTooHighStickyFault());
-    System.out.println("4: "+ mCompressor.getCompressorNotConnectedFault());
-    System.out.println("3: "+ mCompressor.getCompressorNotConnectedStickyFault());
-    System.out.println("2: "+ mCompressor.getCompressorShortedFault());
-    System.out.println("1: "+ mCompressor.getCompressorShortedStickyFault());
-    mCompressor.start();
-    */
-
-
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
 
     //intake(Statics.intakeSpeed * (toInt(gp.getAButton()) - toInt(gp.getXButton())));
@@ -289,13 +271,15 @@ public class Robot extends TimedRobot {
 
     diagnostics();
 
-    if (gp.getXButton()) {
-
-      pneumatic1.set(DoubleSolenoid.Value.kForward);
-
-    }
-    else if (gp.getYButton()) {
-      pneumatic1.set(DoubleSolenoid.Value.kReverse);
+    if (gp.getXButtonPressed()) {
+      switch (pneumatic_intake.get()) {
+        case DoubleSolenoid.Value.kForward: pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
+        break;
+        case DoubleSolenoid.Value.kReverse: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
+        break;
+        case DoubleSolenoid.Value.kOff: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
+        break;
+      }
     }
 
   }
