@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import frc.robot.Constants.Statics;
 import frc.robot.Constants.Statics.CompetitionSelection;
-import com.kauailabs.navx.frc.AHRS;
 
 import java.util.ArrayList;
 
@@ -43,7 +42,7 @@ import edu.wpi.cscore.VideoSink;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Compressor;
-import com.kauailabs.navx.frc.AHRS;
+
 
 
 
@@ -74,7 +73,7 @@ public class Robot extends TimedRobot {
   public VictorSPX intakeFront;
   public XboxController gp;
   public PowerDistributionPanel pdp; 
-  public AHRS navx;
+  
 
   //public PIDController smartPID;
   
@@ -146,7 +145,7 @@ public class Robot extends TimedRobot {
     back_left.follow(front_left);
     
     maxbotixFront_US = new AnalogInput(Statics.US_Maxbotix_Front);
-    navx = new AHRS(); 
+    //navx = new AHRS(); 
 
   }
 
@@ -334,23 +333,24 @@ public class Robot extends TimedRobot {
     
   }
   public void test(){
-    System.out.println(front_left.getSelectedSensorPosition());
-    System.out.println(back_left.getSelectedSensorPosition());
-    System.out.println(front_right.getSelectedSensorPosition());
-    System.out.println(front_right.getSelectedSensorPosition());
+    move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
+    System.out.println("FL:" + front_left.getSelectedSensorPosition(0));
+    System.out.println("BL:" + back_left.getSelectedSensorPosition(0));
+    System.out.println("FR:" + front_right.getSelectedSensorPosition(0));
+    System.out.println("FR:" + back_right.getSelectedSensorPosition(0));
     //MULTIPLY BY FRACTION THING? CALCULATE METERS TRAVELLED PER UNITS 
 
   }
   
 
-  public void setSetpoint(int setpoint)
+  /*public void setSetpoint(int setpoint)
   {
 
   }
   public void PID()
   {
 
-  }
+  }*/
 
 
 
@@ -365,8 +365,8 @@ public class Robot extends TimedRobot {
       front_right.set(ControlMode.PercentOutput, 0);
     }
 
-    if(Math.abs(leftThrottle) >= Statics.stickDeadzone){
-      front_left.set(ControlMode.PercentOutput, -leftThrottle);
+    if(Math.abs(rightThrottle) >= Statics.stickDeadzone){
+      front_left.set(ControlMode.PercentOutput, -rightThrottle);
     }
     else {
       front_left.set(ControlMode.PercentOutput, 0);
