@@ -72,6 +72,7 @@ public class Robot extends TimedRobot {
   public VictorSPX intakeFront;
   public XboxController gp;
   public PowerDistributionPanel pdp; 
+  public AHRS navx;
   
 
   DigitalInput limitSwitch;
@@ -138,6 +139,7 @@ public class Robot extends TimedRobot {
     back_left.follow(front_left);
     
     maxbotixFront_US = new AnalogInput(Statics.US_Maxbotix_Front);
+    navx = new AHRS(Statics.); 
 
   }
 
@@ -170,6 +172,9 @@ public class Robot extends TimedRobot {
       break;
       case COMPETITION_5:
       competition5Periodic();
+      break;
+      case TEST:
+      test();
       break;
 
     }
@@ -295,18 +300,49 @@ public class Robot extends TimedRobot {
 
   public void competition1Periodic(){
 
+
   }
   public void competition2Periodic(){
     
   }
   public void competition3Periodic(){
+    move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
+    if (gp.getXButton()) {
+
+      pneumatic1.set(DoubleSolenoid.Value.kForward);
+
+    }
+    else if (gp.getYButton()) {
+      pneumatic1.set(DoubleSolenoid.Value.kReverse);
+    }
+    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
+    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
     
   }
   public void competition4Periodic(){
+    //PUT IN PIXY CODE
     
+    move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
+    if (gp.getXButton()) {
+
+      pneumatic1.set(DoubleSolenoid.Value.kForward);
+
+    }
+    else if (gp.getYButton()) {
+      pneumatic1.set(DoubleSolenoid.Value.kReverse);
+    }
+
+    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
+    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
+
+
+
   }
   public void competition5Periodic(){
     
+  }
+  public void test(){
+
   }
 
 

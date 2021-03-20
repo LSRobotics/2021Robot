@@ -8,7 +8,7 @@ package frc.robot.Constants;
 /** Add your docs here. */
 public class Statics {
     public enum CompetitionSelection{
-        COMPETITION_1, COMPETITION_2, COMPETITION_3, COMPETITION_4, COMPETITION_5
+        COMPETITION_1, COMPETITION_2, COMPETITION_3, COMPETITION_4, COMPETITION_5, TEST
     }
     public static int Wheel_FrontLeft = 1;
     public static int Wheel_BackLeft = 2;
@@ -21,6 +21,8 @@ public class Statics {
     public static int intake_top = 5;
 
     public static int shooter = 9;
+
+    public static int navx = 10;
 
     public static double stickDeadzone = 0.1;
 
