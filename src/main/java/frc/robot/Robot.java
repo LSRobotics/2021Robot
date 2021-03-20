@@ -73,6 +73,8 @@ public class Robot extends TimedRobot {
   public XboxController gp;
   public PowerDistributionPanel pdp; 
   public AHRS navx;
+
+  public PIDController smartPID;
   
 
   DigitalInput limitSwitch;
@@ -139,7 +141,7 @@ public class Robot extends TimedRobot {
     back_left.follow(front_left);
     
     maxbotixFront_US = new AnalogInput(Statics.US_Maxbotix_Front);
-    navx = new AHRS(Statics.); 
+    navx = new AHRS(Statics.navx); 
 
   }
 
@@ -299,11 +301,12 @@ public class Robot extends TimedRobot {
   }
 
   public void competition1Periodic(){
-
+ // move(pid.calculate());
 
   }
   public void competition2Periodic(){
     
+    //navx.getYaw();
   }
   public void competition3Periodic(){
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
