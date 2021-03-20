@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import frc.robot.Constants.Statics;
 import frc.robot.Constants.Statics.CompetitionSelection;
+import com.kauailabs.navx.frc.AHRS;
 
 import java.util.ArrayList;
 
@@ -42,6 +43,7 @@ import edu.wpi.cscore.VideoSink;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Compressor;
+import com.kauailabs.navx.frc.AHRS;
 
 
 
@@ -74,7 +76,7 @@ public class Robot extends TimedRobot {
   public PowerDistributionPanel pdp; 
   public AHRS navx;
 
-  public PIDController smartPID;
+  //public PIDController smartPID;
   
 
   DigitalInput limitSwitch;
@@ -82,9 +84,14 @@ public class Robot extends TimedRobot {
 
   public static Compressor mCompressor;
 
-  public static DoubleSolenoid pneumatic_intake;
-  public static DoubleSolenoid pneumatic_ratchet;
-  public static DoubleSolenoid pneumatic_drive_train_gear_shift;
+  //public static DoubleSolenoid pneumatic_intake;
+  //public static DoubleSolenoid pneumatic_ratchet;
+ // public static DoubleSolenoid pneumatic_drive_train_gear_shift;
+
+  static double kP = 0.03f;
+  static double kI = 0.00f;
+  static double kD = 0.00f;
+  static double kF = 0.00f;
 
   //sensors
   AnalogInput maxbotixFront_US;
@@ -125,9 +132,9 @@ public class Robot extends TimedRobot {
     limitSwitch = new DigitalInput(1);
 
 
-    pneumatic_intake = new DoubleSolenoid(pneumatic_intake_forward_channel, pneumatic_intake_backward_channel);
-    pneumatic_ratchet = new DoubleSolenoid(pneumatic_climb_ratchet_forward_channel, pneumatic_climb_ratchet_backward_channel);
-    pneumatic_drive_train_gear_shift = new DoubleSolenoid(pneumatic_drive_train_gear_shift_forward_channel, pneumatic_drive_train_gear_shift_backward_channel);
+   // pneumatic_intake = new DoubleSolenoid(pneumatic_intake_forward_channel, pneumatic_intake_backward_channel);
+    //pneumatic_ratchet = new DoubleSolenoid(pneumatic_climb_ratchet_forward_channel, pneumatic_climb_ratchet_backward_channel);
+   // pneumatic_drive_train_gear_shift = new DoubleSolenoid(pneumatic_drive_train_gear_shift_forward_channel, pneumatic_drive_train_gear_shift_backward_channel);
 
     shooter.configFactoryDefault();
     front_left.configFactoryDefault();
@@ -139,7 +146,7 @@ public class Robot extends TimedRobot {
     back_left.follow(front_left);
     
     maxbotixFront_US = new AnalogInput(Statics.US_Maxbotix_Front);
-    navx = new AHRS(Statics.navx); 
+    navx = new AHRS(); 
 
   }
 
@@ -271,7 +278,7 @@ public class Robot extends TimedRobot {
 
     diagnostics();
 
-    if (gp.getXButtonPressed()) {
+    /*if (gp.getXButtonPressed()) {
       switch (pneumatic_intake.get()) {
         case DoubleSolenoid.Value.kForward: pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
         break;
@@ -280,12 +287,14 @@ public class Robot extends TimedRobot {
         case DoubleSolenoid.Value.kOff: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
         break;
       }
-    }
+    }*/
 
   }
 
   public void competition1Periodic(){
  // move(pid.calculate());
+    
+    
 
   }
   public void competition2Periodic(){
@@ -294,14 +303,10 @@ public class Robot extends TimedRobot {
   }
   public void competition3Periodic(){
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-    if (gp.getXButton()) {
-
-      pneumatic1.set(DoubleSolenoid.Value.kForward);
-
-    }
-    else if (gp.getYButton()) {
-      pneumatic1.set(DoubleSolenoid.Value.kReverse);
-    }
+    /*if (gp.getXButton()) {
+      pneumatic_intake.set(DoubleSolenoid.Value.kForward);
+    }*/
+    
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
     
@@ -310,14 +315,14 @@ public class Robot extends TimedRobot {
     //PUT IN PIXY CODE
     
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-    if (gp.getXButton()) {
+    /*if (gp.getXButton()) {
 
       pneumatic1.set(DoubleSolenoid.Value.kForward);
 
     }
     else if (gp.getYButton()) {
       pneumatic1.set(DoubleSolenoid.Value.kReverse);
-    }
+    }*/
 
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
@@ -329,6 +334,21 @@ public class Robot extends TimedRobot {
     
   }
   public void test(){
+    System.out.println(front_left.getSelectedSensorPosition());
+    System.out.println(back_left.getSelectedSensorPosition());
+    System.out.println(front_right.getSelectedSensorPosition());
+    System.out.println(front_right.getSelectedSensorPosition());
+    //MULTIPLY BY FRACTION THING? CALCULATE METERS TRAVELLED PER UNITS 
+
+  }
+  
+
+  public void setSetpoint(int setpoint)
+  {
+
+  }
+  public void PID()
+  {
 
   }
 

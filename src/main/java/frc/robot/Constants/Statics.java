@@ -41,7 +41,7 @@ public class Statics {
     public static int pneumatic_drive_train_gear_shift_backward_channel = 5;
     
     //Change the "COMPETITION_1" in the next line to whichever competition you need to run.
-    static final public CompetitionSelection current_competition = CompetitionSelection.COMPETITION_1;
+    static final public CompetitionSelection current_competition = CompetitionSelection.TEST;
 
 
 }
