@@ -266,6 +266,21 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
+    /*
+    //mCompressor.setClosedLoopControl(true);
+    System.out.println("Pressure Switch Value: "+ mCompressor.getPressureSwitchValue());
+    System.out.println("Current: "+ mCompressor.getCompressorCurrent());
+    System.out.println("ClosedLoopCOntrol: "+ mCompressor.getClosedLoopControl());
+    System.out.println("6: "+ mCompressor.getCompressorCurrentTooHighFault());
+    System.out.println("5: "+ mCompressor.getCompressorCurrentTooHighStickyFault());
+    System.out.println("4: "+ mCompressor.getCompressorNotConnectedFault());
+    System.out.println("3: "+ mCompressor.getCompressorNotConnectedStickyFault());
+    System.out.println("2: "+ mCompressor.getCompressorShortedFault());
+    System.out.println("1: "+ mCompressor.getCompressorShortedStickyFault());
+    mCompressor.start();
+    */
+
+
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
 
     //intake(Statics.intakeSpeed * (toInt(gp.getAButton()) - toInt(gp.getXButton())));
@@ -298,6 +313,43 @@ public class Robot extends TimedRobot {
   }
   public void competition2Periodic(){
     
+    switch(current_part){
+    case PART_1:
+    
+      //Forward 150 in
+      //Rotate 90
+      //Forward 48 in
+      //Rotate 180
+      //Forward 48 in
+      //Rotate 270
+      //Forward 48 in
+      //Rotate to 0
+      //Forward 168 in
+      //Rotate 270
+      //Forward 48 in
+      //Rotate 180
+      //Forward 48 in
+      //Rotate 90
+      //Forward 96 in
+      //Rotate 0
+      //Forward 96 in
+      //Rotate 270
+      //Forward 48
+      //Rotate 180
+      //Forward 250 in
+    break;
+    case PART_2:
+      //CCW 30"
+      //CW 90"
+      //CCW 30"
+      //CW 90"
+      //CCW 30"
+    break;
+    case PART_3:
+      //CCW - Forward - 60"
+      //
+    break;
+  }
     //navx.getYaw();
   }
   public void competition3Periodic(){
