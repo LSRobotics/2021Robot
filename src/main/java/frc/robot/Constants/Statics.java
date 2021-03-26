@@ -10,6 +10,9 @@ public class Statics {
     public enum CompetitionSelection{
         COMPETITION_1, COMPETITION_2, COMPETITION_3, COMPETITION_4, COMPETITION_5, TEST
     }
+    public enum PartSelection{
+        PART_1, PART_2, PART_3
+    }
     public static int Wheel_FrontLeft = 1;
     public static int Wheel_BackLeft = 2;
     public static int Wheel_FrontRight = 3;
@@ -42,6 +45,8 @@ public class Statics {
     
     //Change the "COMPETITION_1" in the next line to whichever competition you need to run.
     static final public CompetitionSelection current_competition = CompetitionSelection.TEST;
+    //Change the variable in order to select a part if applicable to respective challenges
+    static final public PartSelection current_part = PartSelection.PART_1;
 
 
 }
