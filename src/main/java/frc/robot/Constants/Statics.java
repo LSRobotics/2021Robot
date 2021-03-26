@@ -30,23 +30,32 @@ public class Statics {
     public static double stickDeadzone = 0.1;
 
     public static double intakeSpeed = .35;
-    public static double shooterSpeed = .95;
+    public static double shooterSpeed = -.95;
+    public static double indexClearSpeed = .2;
 
     public static int US_Maxbotix_Front = 3;
+    public static int front_ir = 1;
 
     public static double cm_to_in = 0.049212598;
+    public static double shooterVelocity = -19000;
 
-    public static int pneumatic_intake_forward_channel = 0;
-    public static int pneumatic_intake_backward_channel = 1;
-    public static int pneumatic_climb_ratchet_forward_channel = 2;
+    public static int pneumatic_intake_forward_channel = 2;
+    public static int pneumatic_intake_backward_channel = 7;
+    public static int pneumatic_climb_ratchet_forward_channel = 6;
     public static int pneumatic_climb_ratchet_backward_channel = 3;
-    public static int pneumatic_drive_train_gear_shift_forward_channel = 4;
-    public static int pneumatic_drive_train_gear_shift_backward_channel = 5;
+    public static int pneumatic_drive_train_gear_shift_forward_channel = 0;
+    public static int pneumatic_drive_train_gear_shift_backward_channel = 1;
     
     //Change the "COMPETITION_1" in the next line to whichever competition you need to run.
     static final public CompetitionSelection current_competition = CompetitionSelection.TEST;
     //Change the variable in order to select a part if applicable to respective challenges
     static final public PartSelection current_part = PartSelection.PART_1;
 
+
+    //FR (1M): 77472
+    //FL (1M): 77231
+    //BL (1M): 77242
+    //BR (1M): 77389
+    //average: 77333.5
 
 }

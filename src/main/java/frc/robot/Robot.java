@@ -46,13 +46,7 @@ import edu.wpi.first.wpilibj.Compressor;
 
 
 
-/**
- * The VM is configured to automatically run this class, and to call the
- * functions corresponding to each mode, as described in the TimedRobot
- * documentation. If you change the name of this class or the package after
- * creating this project, you must also update the build.gradle file in the
- * project.
- */
+
 public class Robot extends TimedRobot {
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
@@ -83,9 +77,9 @@ public class Robot extends TimedRobot {
 
   public static Compressor mCompressor;
 
-  //public static DoubleSolenoid pneumatic_intake;
-  //public static DoubleSolenoid pneumatic_ratchet;
- // public static DoubleSolenoid pneumatic_drive_train_gear_shift;
+  public static DoubleSolenoid pneumatic_intake;
+  public static DoubleSolenoid pneumatic_ratchet;
+  public static DoubleSolenoid pneumatic_drive_train_gear_shift;
 
   static double kP = 0.03f;
   static double kI = 0.00f;
@@ -94,14 +88,11 @@ public class Robot extends TimedRobot {
 
   //sensors
   AnalogInput maxbotixFront_US;
+  AnalogInput IR;
 
 
 
 
-  /**
-   * This function is run when the robot is first started up and should be
-   * used for any initialization code.
-   */
   @Override
   public void robotInit() {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
@@ -131,9 +122,14 @@ public class Robot extends TimedRobot {
     limitSwitch = new DigitalInput(1);
 
 
-   // pneumatic_intake = new DoubleSolenoid(pneumatic_intake_forward_channel, pneumatic_intake_backward_channel);
-    //pneumatic_ratchet = new DoubleSolenoid(pneumatic_climb_ratchet_forward_channel, pneumatic_climb_ratchet_backward_channel);
-   // pneumatic_drive_train_gear_shift = new DoubleSolenoid(pneumatic_drive_train_gear_shift_forward_channel, pneumatic_drive_train_gear_shift_backward_channel);
+    pneumatic_intake = new DoubleSolenoid(Statics.pneumatic_intake_forward_channel, Statics.pneumatic_intake_backward_channel);
+    pneumatic_ratchet = new DoubleSolenoid(Statics.pneumatic_climb_ratchet_forward_channel, Statics.pneumatic_climb_ratchet_backward_channel);
+    pneumatic_drive_train_gear_shift = new DoubleSolenoid(Statics.pneumatic_drive_train_gear_shift_forward_channel, Statics.pneumatic_drive_train_gear_shift_backward_channel);
+    IR = new AnalogInput(Statics.front_ir);
+
+    pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
+    pneumatic_ratchet.set(DoubleSolenoid.Value.kReverse);
+    pneumatic_drive_train_gear_shift.set(DoubleSolenoid.Value.kReverse);
 
     shooter.configFactoryDefault();
     front_left.configFactoryDefault();
@@ -149,14 +145,6 @@ public class Robot extends TimedRobot {
 
   }
 
-  /**
-   * This function is called every robot packet, no matter the mode. Use
-   * this for items like diagnostics that you want ran during disabled,
-   * autonomous, teleoperated and test.
-   *
-   * <p>This runs after the mode specific periodic functions, but before
-   * LiveWindow and SmartDashboard integrated updating.
-   */
   @Override
   public void robotPeriodic() {
 
@@ -186,17 +174,7 @@ public class Robot extends TimedRobot {
     }
   }
 
-  /**
-   * This autonomous (along with the chooser code above) shows how to select
-   * between different autonomous modes using the dashboard. The sendable
-   * chooser code works with the Java SmartDashboard. If you prefer the
-   * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-   * getString line to get the auto name from the text box below the Gyro
-   *
-   * <p>You can add additional auto modes by adding additional comparisons to
-   * the switch structure below with additional strings. If using the
-   * SendableChooser make sure to add them to the chooser code above as well.
-   */
+
   @Override
   public void autonomousInit() {
     m_autoSelected = m_chooser.getSelected();
@@ -209,15 +187,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
+    
   }
 
   /**
@@ -264,45 +234,21 @@ public class Robot extends TimedRobot {
    * This function is called periodically during test mode.
    */
   @Override
-  public void testPeriodic() {
-
-    /*
-    //mCompressor.setClosedLoopControl(true);
-    System.out.println("Pressure Switch Value: "+ mCompressor.getPressureSwitchValue());
-    System.out.println("Current: "+ mCompressor.getCompressorCurrent());
-    System.out.println("ClosedLoopCOntrol: "+ mCompressor.getClosedLoopControl());
-    System.out.println("6: "+ mCompressor.getCompressorCurrentTooHighFault());
-    System.out.println("5: "+ mCompressor.getCompressorCurrentTooHighStickyFault());
-    System.out.println("4: "+ mCompressor.getCompressorNotConnectedFault());
-    System.out.println("3: "+ mCompressor.getCompressorNotConnectedStickyFault());
-    System.out.println("2: "+ mCompressor.getCompressorShortedFault());
-    System.out.println("1: "+ mCompressor.getCompressorShortedStickyFault());
-    mCompressor.start();
-    */
-
-
-    move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-
-    //intake(Statics.intakeSpeed * (toInt(gp.getAButton()) - toInt(gp.getXButton())));
-    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
-
-    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
+  public void testPeriodic() { 
+    }
+  
+  public void togglePneumaticIntake()
+  {
     
-    //climb(DPadToInt(gp.getPOV()));
-
-    diagnostics();
-
-    /*if (gp.getXButtonPressed()) {
       switch (pneumatic_intake.get()) {
-        case DoubleSolenoid.Value.kForward: pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
+        case kForward: pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
         break;
-        case DoubleSolenoid.Value.kReverse: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
+        case kReverse: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
         break;
-        case DoubleSolenoid.Value.kOff: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
+        case kOff: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
         break;
       }
-    }*/
-
+    
   }
 
   public void competition1Periodic(){
@@ -313,7 +259,7 @@ public class Robot extends TimedRobot {
   }
   public void competition2Periodic(){
     
-    switch(current_part){
+    switch(Statics.current_part){
     case PART_1:
     
       //Forward 150 in
@@ -354,26 +300,19 @@ public class Robot extends TimedRobot {
   }
   public void competition3Periodic(){
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-    /*if (gp.getXButton()) {
+    if (gp.getXButton()) {
       pneumatic_intake.set(DoubleSolenoid.Value.kForward);
-    }*/
+    }
     
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
     
   }
   public void competition4Periodic(){
-    //PUT IN PIXY CODE
+    
     
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-    /*if (gp.getXButton()) {
-
-      pneumatic1.set(DoubleSolenoid.Value.kForward);
-
-    }
-    else if (gp.getYButton()) {
-      pneumatic1.set(DoubleSolenoid.Value.kReverse);
-    }*/
+    
 
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
@@ -388,23 +327,19 @@ public class Robot extends TimedRobot {
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
-    System.out.println("FL:" + front_left.getSelectedSensorPosition());
-    System.out.println("BL:" + back_left.getSelectedSensorPosition());
-    System.out.println("FR:" + front_right.getSelectedSensorPosition());
-    System.out.println("FR:" + back_right.getSelectedSensorPosition());
-    //MULTIPLY BY FRACTION THING? CALCULATE METERS TRAVELLED PER UNITS 
+    //indexClear(Statics.indexClearSpeed * toInt(gp.getXButton()));
+    if(gp.getXButtonPressed())
+    {
+      togglePneumaticIntake();
+    }
+    detectBall();
+   
+    
 
   }
   
 
-  /*public void setSetpoint(int setpoint)
-  {
-
-  }
-  public void PID()
-  {
-
-  }*/
+  
 
 
 
@@ -430,11 +365,20 @@ public class Robot extends TimedRobot {
   }
 
   public void shoot(double speed) {
+    //intakeToShooter.set(ControlMode.PercentOutput, speed);
+    if(shooter.getSelectedSensorVelocity() <= Statics.shooterVelocity)
+    {
+      intakeToShooter.set(ControlMode.PercentOutput, Statics.intakeSpeed);
+    }
+    shooter.set(ControlMode.PercentOutput, speed);
+    System.out.println("Shooter speed: " + shooter.getSelectedSensorVelocity());
+  }
 
-  
-    shooter.set(-speed);
-
-
+  public void indexClear(double speed){
+    shooter.set(ControlMode.PercentOutput, -speed);
+    intakeTop.set(ControlMode.PercentOutput, -speed);
+    intakeBottom.set(ControlMode.PercentOutput, -speed);
+    intakeToShooter.set(ControlMode.PercentOutput, speed);
   }
 
   public int DPadToInt(int angle)
@@ -453,10 +397,6 @@ public class Robot extends TimedRobot {
     {
       climb.set(0.1);
     }
-   /* else if(null)
-    {
-      climb.set(0);
-    }*/
     else
     {
       climb.set(0);
@@ -467,12 +407,23 @@ public class Robot extends TimedRobot {
   }
 
   public void intake(double speed) {
-
     intakeTop.set(ControlMode.PercentOutput, -speed);
     intakeBottom.set(ControlMode.PercentOutput, -speed);
     intakeToShooter.set(ControlMode.PercentOutput, speed);
     intakeFront.set(ControlMode.PercentOutput, -speed);
+  }
 
+  public void detectBall()
+  {
+    double irVoltage = IR.getAverageVoltage();
+    if(irVoltage > 1.5)
+    {
+      //intakeTop.set(ControlMode.PercentOutput, Statics.intakeSpeed);
+      //intakeBottom.set(ControlMode.PercentOutput, Statics.intakeSpeed);
+      //intakeToShooter.set(ControlMode.PercentOutput, Statics.intakeSpeed);
+    }
+    System.out.println("VOLTAGE IR:" + irVoltage);
+    
   }
 
   public int toInt(boolean condition) {
