@@ -334,10 +334,12 @@ public class Robot extends TimedRobot {
   }
   public void test(){
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-    System.out.println("FL:" + front_left.getSelectedSensorPosition(0));
-    System.out.println("BL:" + back_left.getSelectedSensorPosition(0));
-    System.out.println("FR:" + front_right.getSelectedSensorPosition(0));
-    System.out.println("FR:" + back_right.getSelectedSensorPosition(0));
+    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
+    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
+    System.out.println("FL:" + front_left.getSelectedSensorPosition());
+    System.out.println("BL:" + back_left.getSelectedSensorPosition());
+    System.out.println("FR:" + front_right.getSelectedSensorPosition());
+    System.out.println("FR:" + back_right.getSelectedSensorPosition());
     //MULTIPLY BY FRACTION THING? CALCULATE METERS TRAVELLED PER UNITS 
 
   }
@@ -365,8 +367,8 @@ public class Robot extends TimedRobot {
       front_right.set(ControlMode.PercentOutput, 0);
     }
 
-    if(Math.abs(rightThrottle) >= Statics.stickDeadzone){
-      front_left.set(ControlMode.PercentOutput, -rightThrottle);
+    if(Math.abs(leftThrottle) >= Statics.stickDeadzone){
+      front_left.set(ControlMode.PercentOutput, -leftThrottle);
     }
     else {
       front_left.set(ControlMode.PercentOutput, 0);
