@@ -55,6 +55,7 @@ public class Robot extends TimedRobot {
   private String m_autoSelected;
   public int ballsPresent;
   public double startTime;
+  public boolean escape;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   WPI_TalonFX front_left;
   WPI_TalonFX front_right;
@@ -73,6 +74,7 @@ public class Robot extends TimedRobot {
   public PowerDistributionPanel pdp;
 
   public Timer timer;
+
   
 
   //public PIDController smartPID;
@@ -381,15 +383,26 @@ public class Robot extends TimedRobot {
   }
 
   public void intake(double speed) {
-    //double irVoltage = IR.getVoltage();
-    //if(irVoltage > Statics.intakeIRThreshold + 0.5)
-    //{
-      //intakeFront.set(ControlMode.PercentOutput, speed * 1.1);
-    //}
-    //else if(irVoltage < Statics.intakeIRThreshold + 0.5)
-    //{
-      intakeFront.set(ControlMode.PercentOutput, -speed * 1.1);
-    //}
+    double irVoltage = IR.getVoltage();
+    if(irVoltage > Statics.intakeIRThreshold)
+    {
+      if(!escape)
+      {
+        startTime = timer.get();
+        escape = true;
+      }
+      intakeFront.set(ControlMode.PercentOutput, -speed * 1.25);
+    }
+    if(irVoltage > Statics.intakeIRThreshold && (timer.get() - startTime) > 2)
+    {
+      intakeFront.set(ControlMode.PercentOutput, 0);
+      escape = false;
+    }
+    else if(irVoltage < Statics.intakeIRThreshold)
+    {
+      intakeFront.set(ControlMode.PercentOutput, -speed * 1.25);
+      startTime = 0;
+    }
      
   }
 

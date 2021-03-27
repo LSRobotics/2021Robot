@@ -40,7 +40,8 @@ public class Statics {
 
     public static double cm_to_in = 0.049212598;
     public static double shooterVelocity = -19000;
-    public static double intakeIRThreshold = 1;
+    public static double intakeIRThreshold = 0.7;
+
 
     public static int pneumatic_intake_forward_channel = 2;
     public static int pneumatic_intake_backward_channel = 7;
