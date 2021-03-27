@@ -19,6 +19,8 @@ import frc.robot.Constants.Statics;
 import frc.robot.Constants.Statics.CompetitionSelection;
 
 import java.util.ArrayList;
+import edu.wpi.first.wpilibj.PIDOutput;
+import main.java.frc.robot.GyroPIDController;
 
 import javax.lang.model.util.ElementScanner6;
 
@@ -45,17 +47,31 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Compressor;
 
+import edu.wpi.first.wpilibj.PIDController;
+import com.kauailabs.navx.frc.AHRS;
 
 
 
 
-public class Robot extends TimedRobot {
+
+public class Robot extends TimedRobot implements PIDOutput {
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
+
   public int ballsPresent;
   public double startTime;
   public boolean escape;
+  public int autonStage;
+  public static double TargetAngle;
+  public static double gyroAngle;
+  public double leftSpeed;
+  public double rightSpeed;
+
+  public GyroPIDController gyroPIDController;
+  public PIDController straightPIDController;
+  
+
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   WPI_TalonFX front_left;
   WPI_TalonFX front_right;
@@ -97,6 +113,7 @@ public class Robot extends TimedRobot {
   //sensors
   AnalogInput ultrasonic;
   AnalogInput IR;
+  AHRS navx;
 
 
 
@@ -106,6 +123,10 @@ public class Robot extends TimedRobot {
     gp = new XboxController(0);
 
     ballsPresent = 0;
+    autonStage = 0;
+    TargetAngle = -1;
+    leftSpeed = 0;
+    rightSpeed = 0;
     shooter = new WPI_TalonFX(Statics.shooter);
     climb = new WPI_TalonFX(Statics.climb_motor_id);
     intakeTop = new VictorSPX(Statics.intake_top);
@@ -147,7 +168,9 @@ public class Robot extends TimedRobot {
     intakeBottom.follow(intakeTop);
     
     ultrasonic = new AnalogInput(Statics.ultrasonic);
-    //navx = new AHRS(); 
+    navx = new AHRS(); 
+    gyroPIDController = new GyroPIDController(Statics.GYRO_P, Statics.GYRO_I, Statics.GYRO_D, Statics.GYRO_F, navx, new gyroPIDOutput());
+    initializePIDControllers();
 
   }
 
@@ -257,7 +280,14 @@ public class Robot extends TimedRobot {
   }
 
   public void competition1Periodic(){
- // move(pid.calculate());
+    updateMove();
+    switch(autonStage)
+    {
+      
+      case 0:
+      gyroPIDController.setSetpoint(90);
+      break;
+    }
   }
 
   public void competition2Periodic(){
@@ -303,16 +333,18 @@ public class Robot extends TimedRobot {
   }
 
   public void competition3Periodic(){
-    move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
+    drive();
+    /*move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
     if(gp.getXButtonPressed()) togglePneumaticIntake();
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
-    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
+    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));*/
   }
 
   public void competition4Periodic(){
-    move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
+   drive();
+    /* move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
-    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
+    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));*/
   }
 
   public void competition5Periodic(){
@@ -320,15 +352,71 @@ public class Robot extends TimedRobot {
   }
 
   public void test(){
-    diagnostics();
+    //drive();
+    gyroPIDController.setSetpoint(90);
+    updateMove();
+    
+    
+  }
+
+  public void drive()
+  {
+    
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
     if(gp.getXButtonPressed()) togglePneumaticIntake();
-    
-    
+    diagnostics();
   }
   
+ 
+
+  public void initializePIDControllers() {
+    gyroPIDController = new GyroPIDController(Statics.GYRO_P, Statics.GYRO_I, Statics.GYRO_D, Statics.GYRO_F, navx, new gyroPIDOutput());
+    gyroPIDController.setPercentTolerance(Statics.PID_GYRO_TOLERANCE);
+    gyroPIDController.enable();
+    /*straightPIDController = new GyroPIDController(Statics.GYRO_P, Statics.GYRO_I, Statics.GYRO_D, Statics.GYRO_F, front_left, new gyroPIDOutput());
+    straightPIDController.setPercentTolerance(Statics.PID_GYRO_TOLERANCE);
+    straightPIDController.enable();*/
+    
+  }
+  private void updateMove() {
+    if(TargetAngle != -1) {
+      if(gyroPIDController.onTarget()) {
+        TargetAngle = -1;
+        autonStage+= 1;
+      }
+      else {
+        gyroPIDController.calculate();
+        move(leftSpeed, rightSpeed);
+      }
+    }
+    
+  }
+
+  public void rotateDegrees(double angle)
+  {
+    navx.reset();
+    gyroPIDController.reset();
+    gyroPIDController.setPID(kP, kI, kD);
+    gyroPIDController.setSetpoint(angle);
+    gyroPIDController.enable();
+  }
+  public void moveTo(double inches)
+  {
+    straightPIDController.setSetpoint(inches * Statics.inchToSensorUnits);
+
+    /*if(front_left.getSelectedSensorPosition() <= inches * Statics.inchToSensorUnits)
+    {
+      front_left.set(ControlMode.PercentOutput, Statics.moveSpeed);
+      front_right.set(ControlMode.PercentOutput, Statics.moveSpeed);
+    }
+    else
+    {
+      front_left.set(ControlMode.PercentOutput, 0);
+      front_right.set(ControlMode.PercentOutput, 0);
+    }*/
+  }
   public void move(double leftThrottle, double rightThrottle) {
     //instead of checking for both the positive and the negative versions, just take the absolute value so you only have to check once
     if(Math.abs(rightThrottle) >= Statics.stickDeadzone){
@@ -449,10 +537,10 @@ public class Robot extends TimedRobot {
         //startTime = timer.get();
         break;
         case 2:
-        speed = -.6;
+        speed = -.7;
         break;
         case 3:
-        speed = -.7;
+        speed = -1;
         break;
         case 4:
         speed = -1;
@@ -510,6 +598,10 @@ public class Robot extends TimedRobot {
     return rawVoltage * Statics.cm_to_in;
   }
 
+  public void pidWrite(double output) {
+    leftSpeed = output;
+    rightSpeed = output;
+  }
   public void diagnostics() {
 
     SmartDashboard.putNumber("Drive Motor Left", front_right.get());
@@ -528,7 +620,17 @@ public class Robot extends TimedRobot {
 
     SmartDashboard.putNumber("Intake Sensor", IR.getVoltage());
     SmartDashboard.putNumber("Balls Present", ballsPresent);
+    SmartDashboard.putNumber("NAVX Z-Axis", navx.getYaw());
   }
 
+  private class gyroPIDOutput implements PIDOutput {
 
+    public void pidWrite(double output) {
+      leftSpeed = output;
+      rightSpeed = -output; 
+    }
+  }
+
+  
 }
+

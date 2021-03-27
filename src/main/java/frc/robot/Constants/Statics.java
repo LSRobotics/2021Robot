@@ -26,6 +26,11 @@ public class Statics {
     public static int shooter = 9;
 
     public static int navx = 10;
+    public final static double PID_GYRO_TOLERANCE = 2;
+    public final static double GYRO_P = .2;
+    public final static double GYRO_I = 0;
+    public final static double GYRO_D = .2;
+    public final static double GYRO_F = 0;
 
     public static int climb_motor_id = 11;
 
@@ -34,6 +39,7 @@ public class Statics {
     public static double intakeSpeed = .35;
     public static double shooterSpeed = -.95;
     public static double indexClearSpeed = .2;
+    public static double moveSpeed = 0.5;
 
     public static int ultrasonic = 3; //NOT IN 3
     public static int front_ir = 1;
@@ -60,6 +66,10 @@ public class Statics {
     //FL (1M): 77231
     //BL (1M): 77242
     //BR (1M): 77389
-    //average: 77333.5
+    //average: 77333.5 == 3 feet
+    //AV (1Foot): 25777.8333
+    //AV (1Inch): 2148.15278
+
+    public static double inchToSensorUnits;
 
 }
