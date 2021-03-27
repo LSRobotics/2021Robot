@@ -27,17 +27,20 @@ public class Statics {
 
     public static int navx = 10;
 
+    public static int climb_motor_id = 11;
+
     public static double stickDeadzone = 0.1;
 
     public static double intakeSpeed = .35;
     public static double shooterSpeed = -.95;
     public static double indexClearSpeed = .2;
 
-    public static int US_Maxbotix_Front = 3;
+    public static int ultrasonic = 3; //NOT IN 3
     public static int front_ir = 1;
 
     public static double cm_to_in = 0.049212598;
     public static double shooterVelocity = -19000;
+    public static double intakeIRThreshold = 1;
 
     public static int pneumatic_intake_forward_channel = 2;
     public static int pneumatic_intake_backward_channel = 7;

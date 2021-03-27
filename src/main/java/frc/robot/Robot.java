@@ -34,6 +34,8 @@ import edu.wpi.first.wpilibj.PowerDistributionPanel;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 
+import edu.wpi.first.wpilibj.Timer;
+
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.cscore.UsbCamera;
@@ -51,6 +53,8 @@ public class Robot extends TimedRobot {
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
+  public int ballsPresent;
+  public double startTime;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   WPI_TalonFX front_left;
   WPI_TalonFX front_right;
@@ -66,7 +70,9 @@ public class Robot extends TimedRobot {
   public VictorSPX intakeToShooter;
   public VictorSPX intakeFront;
   public XboxController gp;
-  public PowerDistributionPanel pdp; 
+  public PowerDistributionPanel pdp;
+
+  public Timer timer;
   
 
   //public PIDController smartPID;
@@ -87,7 +93,7 @@ public class Robot extends TimedRobot {
   static double kF = 0.00f;
 
   //sensors
-  AnalogInput maxbotixFront_US;
+  AnalogInput ultrasonic;
   AnalogInput IR;
 
 
@@ -95,19 +101,17 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_chooser);
-
     gp = new XboxController(0);
 
+    ballsPresent = 0;
     shooter = new WPI_TalonFX(Statics.shooter);
-    climb = new WPI_TalonFX(11);
+    climb = new WPI_TalonFX(Statics.climb_motor_id);
     intakeTop = new VictorSPX(Statics.intake_top);
     intakeBottom = new VictorSPX(Statics.intake_bottom);
     intakeToShooter = new VictorSPX(Statics.intake_toShooter);
     intakeFront = new VictorSPX(Statics.intake_front);
 
+    timer = new Timer();
 
     pdp = new PowerDistributionPanel(0);
     
@@ -117,10 +121,8 @@ public class Robot extends TimedRobot {
     back_right = new WPI_TalonFX(Statics.Wheel_BackRight);
 
     mCompressor = new Compressor(0);
-
     
     limitSwitch = new DigitalInput(1);
-
 
     pneumatic_intake = new DoubleSolenoid(Statics.pneumatic_intake_forward_channel, Statics.pneumatic_intake_backward_channel);
     pneumatic_ratchet = new DoubleSolenoid(Statics.pneumatic_climb_ratchet_forward_channel, Statics.pneumatic_climb_ratchet_backward_channel);
@@ -139,15 +141,16 @@ public class Robot extends TimedRobot {
 
     back_right.follow(front_right);
     back_left.follow(front_left);
+
+    intakeBottom.follow(intakeTop);
     
-    maxbotixFront_US = new AnalogInput(Statics.US_Maxbotix_Front);
+    ultrasonic = new AnalogInput(Statics.ultrasonic);
     //navx = new AHRS(); 
 
   }
 
   @Override
   public void robotPeriodic() {
-
 
     //Determine which competition is being run by value in statics
     switch(Statics.current_competition)
@@ -172,14 +175,19 @@ public class Robot extends TimedRobot {
       break;
 
     }
+    
+    if(gp.getYButtonPressed())
+    {
+      pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
+    }
+    
+    intakeTop.set(ControlMode.PercentOutput, setBeltSpeed());
+    intakeToShooter.set(ControlMode.PercentOutput, setToShooterBeltSpeed());
   }
 
 
   @Override
   public void autonomousInit() {
-    m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-    System.out.println("Auto selected: " + m_autoSelected);
   }
 
   /**
@@ -203,7 +211,6 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
    
-
   }
 
   /**
@@ -226,8 +233,6 @@ public class Robot extends TimedRobot {
   @Override
   public void testInit() {
 
-   
-
   }
 
   /**
@@ -239,24 +244,20 @@ public class Robot extends TimedRobot {
   
   public void togglePneumaticIntake()
   {
-    
-      switch (pneumatic_intake.get()) {
-        case kForward: pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
-        break;
-        case kReverse: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
-        break;
-        case kOff: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
-        break;
-      }
-    
+    switch (pneumatic_intake.get()) {
+      case kForward: pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
+      break;
+      case kReverse: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
+      break;
+      case kOff: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
+      break;
+    }
   }
 
   public void competition1Periodic(){
  // move(pid.calculate());
-    
-    
-
   }
+
   public void competition2Periodic(){
     
     switch(Statics.current_part){
@@ -298,54 +299,35 @@ public class Robot extends TimedRobot {
   }
     //navx.getYaw();
   }
+
   public void competition3Periodic(){
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-    if (gp.getXButton()) {
-      pneumatic_intake.set(DoubleSolenoid.Value.kForward);
-    }
-    
+    if(gp.getXButtonPressed()) togglePneumaticIntake();
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
-    
   }
+
   public void competition4Periodic(){
-    
-    
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-    
-
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
-
-
-
   }
+
   public void competition5Periodic(){
     
   }
+
   public void test(){
+    diagnostics();
     move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
-    //indexClear(Statics.indexClearSpeed * toInt(gp.getXButton()));
-    if(gp.getXButtonPressed())
-    {
-      togglePneumaticIntake();
-    }
-    detectBall();
-   
+    if(gp.getXButtonPressed()) togglePneumaticIntake();
     
-
+    
   }
   
-
-  
-
-
-
   public void move(double leftThrottle, double rightThrottle) {
-
-
     //instead of checking for both the positive and the negative versions, just take the absolute value so you only have to check once
     if(Math.abs(rightThrottle) >= Statics.stickDeadzone){
       front_right.set(ControlMode.PercentOutput, rightThrottle);
@@ -361,25 +343,19 @@ public class Robot extends TimedRobot {
       front_left.set(ControlMode.PercentOutput, 0);
     }
 
-
   }
 
   public void shoot(double speed) {
-    //intakeToShooter.set(ControlMode.PercentOutput, speed);
-    if(shooter.getSelectedSensorVelocity() <= Statics.shooterVelocity)
-    {
-      intakeToShooter.set(ControlMode.PercentOutput, Statics.intakeSpeed);
-    }
     shooter.set(ControlMode.PercentOutput, speed);
-    System.out.println("Shooter speed: " + shooter.getSelectedSensorVelocity());
   }
 
-  public void indexClear(double speed){
-    shooter.set(ControlMode.PercentOutput, -speed);
-    intakeTop.set(ControlMode.PercentOutput, -speed);
-    intakeBottom.set(ControlMode.PercentOutput, -speed);
-    intakeToShooter.set(ControlMode.PercentOutput, speed);
-  }
+  /*public void indexClear(double speed){
+    ballsPresent = 0;
+    shooter.set(ControlMode.PercentOutput, speed);
+    
+    //intakeBottom.set(ControlMode.PercentOutput, -speed);
+    intakeToShooter.set(ControlMode.PercentOutput, -speed);
+  }*/
 
   public int DPadToInt(int angle)
   {
@@ -402,35 +378,118 @@ public class Robot extends TimedRobot {
       climb.set(0);
     }
     
-
-   SmartDashboard.putNumber("Direction", DPadToInt(gp.getPOV()));
   }
 
   public void intake(double speed) {
-    intakeTop.set(ControlMode.PercentOutput, -speed);
-    intakeBottom.set(ControlMode.PercentOutput, -speed);
-    intakeToShooter.set(ControlMode.PercentOutput, speed);
-    intakeFront.set(ControlMode.PercentOutput, -speed);
+    //double irVoltage = IR.getVoltage();
+    //if(irVoltage > Statics.intakeIRThreshold + 0.5)
+    //{
+      //intakeFront.set(ControlMode.PercentOutput, speed * 1.1);
+    //}
+    //else if(irVoltage < Statics.intakeIRThreshold + 0.5)
+    //{
+      intakeFront.set(ControlMode.PercentOutput, -speed * 1.1);
+    //}
+     
   }
 
-  public void detectBall()
+  
+
+  public double setToShooterBeltSpeed()
   {
-    double irVoltage = IR.getAverageVoltage();
-    if(irVoltage > 1.5)
+    double speed = 0;
+    if(ballsPresent == 3)
     {
-      //intakeTop.set(ControlMode.PercentOutput, Statics.intakeSpeed);
-      //intakeBottom.set(ControlMode.PercentOutput, Statics.intakeSpeed);
-      //intakeToShooter.set(ControlMode.PercentOutput, Statics.intakeSpeed);
+        speed = Statics.intakeSpeed * toInt(gp.getAButton());
     }
-    System.out.println("VOLTAGE IR:" + irVoltage);
-    
+    /*if(startTime != 0)
+      {
+        speed = -0.4;
+      }*/
+      //speed = Statics.intakeSpeed * toInt(gp.getAButton());
+  if(shooter.getSelectedSensorVelocity() <= Statics.shooterVelocity)
+      {
+        ballsPresent = 0;
+        speed = Statics.intakeSpeed;
+      }
+      if(toInt(gp.getYButton()) != 0)
+      {
+      speed = -(Statics.intakeSpeed * toInt(gp.getYButton()));
+      }
+    return speed;
+  }
+  public double setBeltSpeed()
+  {
+    boolean escape = false;
+    double irVoltage = IR.getVoltage();
+    double speed = 0;
+    if (irVoltage > Statics.intakeIRThreshold && toInt(gp.getYButton()) == 0)
+    {
+      escape = true;
+      switch(ballsPresent)
+      {
+        case 0:
+        speed = -.3;
+        break;
+        case 1:
+        speed = -.3;
+        //startTime = timer.get();
+        break;
+        case 2:
+        speed = -.6;
+        break;
+        case 3:
+        speed = -.7;
+        break;
+        case 4:
+        speed = -1;
+        break;
+        case 5:
+        speed = -1;
+        break;
+        
+      }
+      
+      return speed;
+      //intakeBottom.set(ControlMode.PercentOutput, -speed * toInt(gp.getAButton())); 
+      //intakeTop.set(ControlMode.PercentOutput, -speed * toInt(gp.getAButton()));
+      
+      
+      
+    }
+    else if(irVoltage <= Statics.intakeIRThreshold && escape)
+    {
+      escape = false;
+      ballsPresent++;
+    }
+   /*
+    if(startTime != 0)
+      {
+        intakeToShooter.set(ControlMode.PercentOutput, -0.4);
+        //intakeBottom.set(ControlMode.PercentOutput, -0.4); 
+        speed = -0.4;
+      }
+      else if((timer.get() - startTime) > 3)
+      {
+        startTime = 0;
+        
+      }*/
+      if(shooter.getSelectedSensorVelocity() <= Statics.shooterVelocity)
+      {
+        //BALLS ZERO IN BELTSHOOTER
+        speed = -Statics.intakeSpeed;
+      }
+      if(toInt(gp.getYButton()) != 0)
+      {
+      speed = (Statics.intakeSpeed * toInt(gp.getYButton()));
+      }
+      
+    return speed;
   }
 
   public int toInt(boolean condition) {
     return condition ? 1 : 0;
   }
-
-  
 
   //function to convert voltage recieved from maxbotix ultrasonic sensor to a distance in inches
   //example: getRangeInches(maxbotixFront_US.getValue());
@@ -447,10 +506,15 @@ public class Robot extends TimedRobot {
 
     SmartDashboard.putNumber("Voltage", pdp.getVoltage());
 
-    SmartDashboard.putNumber("Ultrasonic Distance", getRangeInches(maxbotixFront_US.getValue()));
+    SmartDashboard.putNumber("Ultrasonic Distance", getRangeInches(ultrasonic.getValue()));
     
     SmartDashboard.putBoolean("Compressor Running", mCompressor.getPressureSwitchValue());
     SmartDashboard.putBoolean("Compressor is Enabled", mCompressor.enabled());
+
+    SmartDashboard.putNumber("Direction", DPadToInt(gp.getPOV()));
+
+    SmartDashboard.putNumber("Intake Sensor", IR.getVoltage());
+    SmartDashboard.putNumber("Balls Present", ballsPresent);
   }
 
 
