@@ -67,6 +67,7 @@ public class Robot extends TimedRobot implements PIDOutput {
   public static double gyroAngle;
   public double leftSpeed;
   public double rightSpeed;
+  public double speedModifier;
 
   public GyroPIDController gyroPIDController;
   public PIDController straightPIDController;
@@ -127,6 +128,7 @@ public class Robot extends TimedRobot implements PIDOutput {
     TargetAngle = -1;
     leftSpeed = 0;
     rightSpeed = 0;
+    speedModifier = Statics.lowModeModifier;
     shooter = new WPI_TalonFX(Statics.shooter);
     climb = new WPI_TalonFX(Statics.climb_motor_id);
     intakeTop = new VictorSPX(Statics.intake_top);
@@ -283,7 +285,6 @@ public class Robot extends TimedRobot implements PIDOutput {
     updateMove();
     switch(autonStage)
     {
-      
       case 0:
       gyroPIDController.setSetpoint(90);
       break;
@@ -351,10 +352,26 @@ public class Robot extends TimedRobot implements PIDOutput {
     
   }
 
+  public void checkSpeedToggle()
+  {
+    if(gp.getBumperPressed(Hand.kLeft))
+    {
+      if(speedModifier == Statics.highModeModifier)
+      {
+        speedModifier = Statics.lowModeModifier;
+      }
+      else if(speedModifier == Statics.lowModeModifier)
+      {
+        speedModifier = Statics.highModeModifier;
+      }
+    }
+  }
   public void test(){
-    //drive();
-    gyroPIDController.setSetpoint(90);
-    updateMove();
+    drive();
+
+
+    //gyroPIDController.setSetpoint(90);
+    //updateMove();
     
     
   }
@@ -362,10 +379,11 @@ public class Robot extends TimedRobot implements PIDOutput {
   public void drive()
   {
     
-    move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
+    move(gp.getY(Hand.kLeft), gp.getX(Hand.kRight));
     intake(Statics.intakeSpeed * toInt(gp.getAButton()));
     shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
     if(gp.getXButtonPressed()) togglePneumaticIntake();
+    checkSpeedToggle();
     diagnostics();
   }
   
@@ -419,20 +437,33 @@ public class Robot extends TimedRobot implements PIDOutput {
   }
   public void move(double leftThrottle, double rightThrottle) {
     //instead of checking for both the positive and the negative versions, just take the absolute value so you only have to check once
-    if(Math.abs(rightThrottle) >= Statics.stickDeadzone){
-      front_right.set(ControlMode.PercentOutput, rightThrottle);
+    /*if(Math.abs(rightThrottle) >= Statics.stickDeadzone){
+      front_right.set(ControlMode.PercentOutput, (rightThrottle * Math.abs(rightThrottle) * speedModifier));
     }
     else {
       front_right.set(ControlMode.PercentOutput, 0);
     }
 
     if(Math.abs(leftThrottle) >= Statics.stickDeadzone){
-      front_left.set(ControlMode.PercentOutput, -leftThrottle);
+      front_left.set(ControlMode.PercentOutput, (-leftThrottle * Math.abs(leftThrottle) * speedModifier));
     }
     else {
       front_left.set(ControlMode.PercentOutput, 0);
-    }
+    }*/
+    double power = -leftThrottle * 0.5;
+    double turn = rightThrottle * 0.3;
 
+    double left = power + turn;
+    double right = power - turn;
+
+    if(Math.abs(leftThrottle) >= Statics.stickDeadzone){
+      front_right.set(ControlMode.PercentOutput, -right);
+      front_left.set(ControlMode.PercentOutput, left);
+    }
+    else{
+      front_right.set(ControlMode.PercentOutput, 0);
+      front_left.set(ControlMode.PercentOutput, 0);
+    }
   }
 
   public void shoot(double speed) {

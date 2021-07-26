@@ -13,10 +13,10 @@ public class Statics {
     public enum PartSelection{
         PART_1, PART_2, PART_3
     }
-    public static int Wheel_FrontLeft = 1;
-    public static int Wheel_BackLeft = 2;
-    public static int Wheel_FrontRight = 3;
-    public static int Wheel_BackRight = 4;
+    public static int Wheel_FrontLeft = 3;
+    public static int Wheel_BackLeft = 0;
+    public static int Wheel_FrontRight = 1;
+    public static int Wheel_BackRight = 2;
 
     public static int intake_front = 8;
     public static int intake_toShooter = 7;
@@ -40,6 +40,9 @@ public class Statics {
     public static double shooterSpeed = -.95;
     public static double indexClearSpeed = .2;
     public static double moveSpeed = 0.5;
+
+    public static double lowModeModifier = 0.4;
+    public static double highModeModifier = 0.80;
 
     public static int ultrasonic = 3; //NOT IN 3
     public static int front_ir = 1;
