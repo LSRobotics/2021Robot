@@ -7,7 +7,6 @@
 
 package frc.robot;
 
-
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
@@ -16,48 +15,30 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import frc.robot.Constants.Statics;
-import frc.robot.Constants.Statics.CompetitionSelection;
-
 import java.util.ArrayList;
 import edu.wpi.first.wpilibj.PIDOutput;
 import main.java.frc.robot.GyroPIDController;
-
 import javax.lang.model.util.ElementScanner6;
-
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
-
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
-
 import edu.wpi.first.wpilibj.DigitalInput;
-
 import edu.wpi.first.wpilibj.Timer;
-
-
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSink;
-
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Compressor;
-
 import edu.wpi.first.wpilibj.PIDController;
 import com.kauailabs.navx.frc.AHRS;
-
-
-
-
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 
 public class Robot extends TimedRobot implements PIDOutput {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
-  private String m_autoSelected;
 
   public int ballsPresent;
   public double startTime;
@@ -72,16 +53,15 @@ public class Robot extends TimedRobot implements PIDOutput {
   public GyroPIDController gyroPIDController;
   public PIDController straightPIDController;
   
-
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
   WPI_TalonFX front_left;
   WPI_TalonFX front_right;
   WPI_TalonFX back_left;
   WPI_TalonFX back_right;
-  WPI_TalonFX climb;
-  DifferentialDrive drive;
+  WPI_TalonFX climbMotor;
   SpeedControllerGroup leftMotors;
   SpeedControllerGroup rightMotors;
+  DifferentialDrive driveMode;
+
   public WPI_TalonFX shooter;
   public VictorSPX intakeTop;
   public VictorSPX intakeBottom;
@@ -92,13 +72,10 @@ public class Robot extends TimedRobot implements PIDOutput {
 
   public Timer timer;
 
-  
-
   //public PIDController smartPID;
-  
 
-  DigitalInput limitSwitch;
-
+  DigitalInput maxLimitSwitch;
+  DigitalInput minLimitSwitch;
 
   public static Compressor mCompressor;
 
@@ -116,8 +93,9 @@ public class Robot extends TimedRobot implements PIDOutput {
   AnalogInput IR;
   AHRS navx;
 
+  boolean overrideClimb = false;
 
-
+  boolean climbLock = true;
 
   @Override
   public void robotInit() {
@@ -130,7 +108,7 @@ public class Robot extends TimedRobot implements PIDOutput {
     rightSpeed = 0;
     speedModifier = Statics.lowModeModifier;
     shooter = new WPI_TalonFX(Statics.shooter);
-    climb = new WPI_TalonFX(Statics.climb_motor_id);
+    climbMotor = new WPI_TalonFX(Statics.climb_motor_id);
     intakeTop = new VictorSPX(Statics.intake_top);
     intakeBottom = new VictorSPX(Statics.intake_bottom);
     intakeToShooter = new VictorSPX(Statics.intake_toShooter);
@@ -147,7 +125,8 @@ public class Robot extends TimedRobot implements PIDOutput {
 
     mCompressor = new Compressor(0);
     
-    limitSwitch = new DigitalInput(1);
+    maxLimitSwitch = new DigitalInput(0); //TODO move to static
+    minLimitSwitch = new DigitalInput(1);
 
     pneumatic_intake = new DoubleSolenoid(Statics.pneumatic_intake_forward_channel, Statics.pneumatic_intake_backward_channel);
     pneumatic_ratchet = new DoubleSolenoid(Statics.pneumatic_climb_ratchet_forward_channel, Statics.pneumatic_climb_ratchet_backward_channel);
@@ -164,8 +143,10 @@ public class Robot extends TimedRobot implements PIDOutput {
     front_right.configFactoryDefault();
     back_right.configFactoryDefault();
 
-    back_right.follow(front_right);
-    back_left.follow(front_left);
+    leftMotors = new SpeedControllerGroup(front_left, back_left);
+    rightMotors = new SpeedControllerGroup(front_right, back_right);
+
+    driveMode = new DifferentialDrive(leftMotors, rightMotors);
 
     intakeBottom.follow(intakeTop);
     
@@ -174,42 +155,12 @@ public class Robot extends TimedRobot implements PIDOutput {
     gyroPIDController = new GyroPIDController(Statics.GYRO_P, Statics.GYRO_I, Statics.GYRO_D, Statics.GYRO_F, navx, new gyroPIDOutput());
     initializePIDControllers();
 
+    climbMotor.setNeutralMode(NeutralMode.Brake);
   }
 
   @Override
   public void robotPeriodic() {
 
-    //Determine which competition is being run by value in statics
-    switch(Statics.current_competition)
-    {
-      case COMPETITION_1:
-      competition1Periodic();
-      break;
-      case COMPETITION_2:
-      competition2Periodic();
-      break;
-      case COMPETITION_3:
-      competition3Periodic();
-      break;
-      case COMPETITION_4:
-      competition4Periodic();
-      break;
-      case COMPETITION_5:
-      competition5Periodic();
-      break;
-      case TEST:
-      test();
-      break;
-
-    }
-    
-    if(gp.getYButtonPressed())
-    {
-      pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
-    }
-    
-    intakeTop.set(ControlMode.PercentOutput, setBeltSpeed());
-    intakeToShooter.set(ControlMode.PercentOutput, setToShooterBeltSpeed());
   }
 
 
@@ -217,57 +168,45 @@ public class Robot extends TimedRobot implements PIDOutput {
   public void autonomousInit() {
   }
 
-  /**
-   * This function is called periodically during autonomous.
-   */
   @Override
   public void autonomousPeriodic() {
     
   }
 
-  /**
-   * This function is called once when teleop is enabled.
-   */
   @Override
   public void teleopInit() {
   }
 
-  /**
-   * This function is called periodically during operator control.
-   */
   @Override
   public void teleopPeriodic() {
+
+    move(gp.getY(Hand.kLeft), gp.getX(Hand.kRight));
+    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
+    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
+    if(gp.getXButtonPressed()) togglePneumaticIntake();
+    climb(DPadToInt(gp.getPOV()), gp.getBumperPressed(Hand.kRight));
+    checkSpeedToggle();
+    diagnostics();
    
   }
 
-  /**
-   * This function is called once when the robot is disabled.
-   */
   @Override
   public void disabledInit() {
   }
 
-  /**
-   * This function is called periodically when disabled.
-   */
   @Override
   public void disabledPeriodic() {
   }
 
-  /**
-   * This function is called once when test mode is enabled.
-   */
   @Override
   public void testInit() {
 
   }
 
-  /**
-   * This function is called periodically during test mode.
-   */
   @Override
   public void testPeriodic() { 
-    }
+  
+  }
   
   public void togglePneumaticIntake()
   {
@@ -279,77 +218,6 @@ public class Robot extends TimedRobot implements PIDOutput {
       case kOff: pneumatic_intake.set(DoubleSolenoid.Value.kForward);
       break;
     }
-  }
-
-  public void competition1Periodic(){
-    updateMove();
-    switch(autonStage)
-    {
-      case 0:
-      gyroPIDController.setSetpoint(90);
-      break;
-    }
-  }
-
-  public void competition2Periodic(){
-    
-    switch(Statics.current_part){
-    case PART_1:
-    
-      //Forward 150 in
-      //Rotate 90
-      //Forward 48 in
-      //Rotate 180
-      //Forward 48 in
-      //Rotate 270
-      //Forward 48 in
-      //Rotate to 0
-      //Forward 168 in
-      //Rotate 270
-      //Forward 48 in
-      //Rotate 180
-      //Forward 48 in
-      //Rotate 90
-      //Forward 96 in
-      //Rotate 0
-      //Forward 96 in
-      //Rotate 270
-      //Forward 48
-      //Rotate 180
-      //Forward 250 in
-    break;
-    case PART_2:
-      //CCW 30"
-      //CW 90"
-      //CCW 30"
-      //CW 90"
-      //CCW 30"
-    break;
-    case PART_3:
-      //CCW - Forward - 60"
-      //
-    break;
-  }
-    //navx.getYaw();
-  }
-
-  public void competition3Periodic(){
-    drive();
-    /*move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-    if(gp.getXButtonPressed()) togglePneumaticIntake();
-    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
-    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));*/
-  }
-
-  public void competition4Periodic(){
-   drive();
-    /* move(gp.getY(Hand.kLeft), gp.getY(Hand.kRight));
-    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
-    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));*/
-  }
-
-  public void competition5Periodic(){
-    
   }
 
   public void checkSpeedToggle()
@@ -367,27 +235,12 @@ public class Robot extends TimedRobot implements PIDOutput {
     }
   }
   public void test(){
-    drive();
-
 
     //gyroPIDController.setSetpoint(90);
     //updateMove();
-    
-    
-  }
 
-  public void drive()
-  {
-    
-    move(gp.getY(Hand.kLeft), gp.getX(Hand.kRight));
-    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
-    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
-    if(gp.getXButtonPressed()) togglePneumaticIntake();
-    checkSpeedToggle();
-    diagnostics();
   }
   
- 
 
   public void initializePIDControllers() {
     gyroPIDController = new GyroPIDController(Statics.GYRO_P, Statics.GYRO_I, Statics.GYRO_D, Statics.GYRO_F, navx, new gyroPIDOutput());
@@ -398,6 +251,7 @@ public class Robot extends TimedRobot implements PIDOutput {
     straightPIDController.enable();*/
     
   }
+  
   private void updateMove() {
     if(TargetAngle != -1) {
       if(gyroPIDController.onTarget()) {
@@ -420,6 +274,7 @@ public class Robot extends TimedRobot implements PIDOutput {
     gyroPIDController.setSetpoint(angle);
     gyroPIDController.enable();
   }
+  
   public void moveTo(double inches)
   {
     straightPIDController.setSetpoint(inches * Statics.inchToSensorUnits);
@@ -435,35 +290,34 @@ public class Robot extends TimedRobot implements PIDOutput {
       front_right.set(ControlMode.PercentOutput, 0);
     }*/
   }
-  public void move(double leftThrottle, double rightThrottle) {
-    //instead of checking for both the positive and the negative versions, just take the absolute value so you only have to check once
-    /*if(Math.abs(rightThrottle) >= Statics.stickDeadzone){
-      front_right.set(ControlMode.PercentOutput, (rightThrottle * Math.abs(rightThrottle) * speedModifier));
+  
+  public void changeClimbLock(boolean state) {
+
+    if (state) { //is locked
+      //lock the ratchet 
+      pneumatic_ratchet.set(DoubleSolenoid.Value.kForward);
     }
-    else {
-      front_right.set(ControlMode.PercentOutput, 0);
+    else { //isn't locked
+      //unlock the ratchet
+      pneumatic_ratchet.set(DoubleSolenoid.Value.kReverse);
     }
 
-    if(Math.abs(leftThrottle) >= Statics.stickDeadzone){
-      front_left.set(ControlMode.PercentOutput, (-leftThrottle * Math.abs(leftThrottle) * speedModifier));
+  }
+  
+  public void move(double throttle, double turn) {
+    if(Math.abs(throttle) <= Statics.stickDeadzone){
+      throttle = 0;
     }
-    else {
-      front_left.set(ControlMode.PercentOutput, 0);
-    }*/
-    double power = -leftThrottle * 0.5;
-    double turn = rightThrottle * 0.3;
 
-    double left = power + turn;
-    double right = power - turn;
+    if (Math.abs(turn) <= Statics.stickDeadzone) {
+      turn = 0;
+    }
 
-    if(Math.abs(leftThrottle) >= Statics.stickDeadzone){
-      front_right.set(ControlMode.PercentOutput, -right);
-      front_left.set(ControlMode.PercentOutput, left);
-    }
-    else{
-      front_right.set(ControlMode.PercentOutput, 0);
-      front_left.set(ControlMode.PercentOutput, 0);
-    }
+    //throttle *= Math.abs(throttle); just case we want to square it
+    //turn *= Math.abs(turn);
+
+    driveMode.arcadeDrive(throttle * speedModifier, turn * speedModifier);
+
   }
 
   public void shoot(double speed) {
@@ -483,22 +337,29 @@ public class Robot extends TimedRobot implements PIDOutput {
     return angle / 45;
     
   }
-  public void climb(int direction)
+  
+  public void climb(int direction, boolean lockInput)
   {
+    
+    if (lockInput) {climbLock = !climbLock;}
 
-    if(direction == 0) //going up!
+    if(direction == 0 && !minLimitSwitch.get()) //going up!
     {
-      climb.set(-0.1);
+      climbLock = false;
+      climbMotor.set(-0.1); //TODO change to static
     }
-    else if(direction == 4) //going down :(
+    else if(direction == 4 && !maxLimitSwitch.get()) //going down :(
     {
-      climb.set(0.1);
+      climbLock = false;
+      climbMotor.set(0.1);
     }
     else
     {
-      climb.set(0);
+      climbMotor.set(0);
     }
-    
+
+    changeClimbLock(climbLock);
+
   }
 
   public void intake(double speed) {
@@ -550,6 +411,7 @@ public class Robot extends TimedRobot implements PIDOutput {
       }
     return speed;
   }
+
   public double setBeltSpeed()
   {
     boolean escape = false;
