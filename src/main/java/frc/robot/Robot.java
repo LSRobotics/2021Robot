@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import frc.robot.Constants.Statics;
+
 import java.util.ArrayList;
 import edu.wpi.first.wpilibj.PIDOutput;
 import main.java.frc.robot.GyroPIDController;
@@ -77,16 +78,15 @@ public class Robot extends TimedRobot implements PIDOutput {
   DigitalInput maxLimitSwitch;
   DigitalInput minLimitSwitch;
 
-  public static Compressor mCompressor;
+  public Compressor mCompressor;
 
-  public static DoubleSolenoid pneumatic_intake;
-  public static DoubleSolenoid pneumatic_ratchet;
-  public static DoubleSolenoid pneumatic_drive_train_gear_shift;
+  public DoubleSolenoid pneumatic_intake;
+  public DoubleSolenoid pneumatic_ratchet;
 
-  static double kP = 0.03f;
-  static double kI = 0.00f;
-  static double kD = 0.00f;
-  static double kF = 0.00f;
+  double kP = 0.03f;
+  double kI = 0.00f;
+  double kD = 0.00f;
+  double kF = 0.00f;
 
   //sensors
   AnalogInput ultrasonic;
@@ -130,12 +130,10 @@ public class Robot extends TimedRobot implements PIDOutput {
 
     pneumatic_intake = new DoubleSolenoid(Statics.pneumatic_intake_forward_channel, Statics.pneumatic_intake_backward_channel);
     pneumatic_ratchet = new DoubleSolenoid(Statics.pneumatic_climb_ratchet_forward_channel, Statics.pneumatic_climb_ratchet_backward_channel);
-    pneumatic_drive_train_gear_shift = new DoubleSolenoid(Statics.pneumatic_drive_train_gear_shift_forward_channel, Statics.pneumatic_drive_train_gear_shift_backward_channel);
     IR = new AnalogInput(Statics.front_ir);
 
     pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
-    pneumatic_ratchet.set(DoubleSolenoid.Value.kReverse);
-    pneumatic_drive_train_gear_shift.set(DoubleSolenoid.Value.kReverse);
+    pneumatic_ratchet.set(DoubleSolenoid.Value.kForward);
 
     shooter.configFactoryDefault();
     front_left.configFactoryDefault();
@@ -186,7 +184,7 @@ public class Robot extends TimedRobot implements PIDOutput {
     if(gp.getXButtonPressed()) togglePneumaticIntake();
     climb(DPadToInt(gp.getPOV()), gp.getBumperPressed(Hand.kRight));
     checkSpeedToggle();
-    diagnostics();
+    //diagnostics();
    
   }
 
@@ -293,11 +291,11 @@ public class Robot extends TimedRobot implements PIDOutput {
   
   public void changeClimbLock(boolean state) {
 
-    if (state) { //is locked
+    if (state && pneumatic_ratchet.get() != DoubleSolenoid.Value.kForward) { //is locked
       //lock the ratchet 
       pneumatic_ratchet.set(DoubleSolenoid.Value.kForward);
     }
-    else { //isn't locked
+    else if (!state && pneumatic_ratchet.get() != DoubleSolenoid.Value.kReverse){ //isn't locked
       //unlock the ratchet
       pneumatic_ratchet.set(DoubleSolenoid.Value.kReverse);
     }
@@ -334,24 +332,24 @@ public class Robot extends TimedRobot implements PIDOutput {
 
   public int DPadToInt(int angle)
   {
+    if (angle == -1) return -1;
     return angle / 45;
     
   }
   
   public void climb(int direction, boolean lockInput)
   {
-    
     if (lockInput) {climbLock = !climbLock;}
 
-    if(direction == 0 && !minLimitSwitch.get()) //going up!
+    if(direction == 0 && !maxLimitSwitch.get()) //going up!
     {
-      climbLock = false;
-      climbMotor.set(-0.1); //TODO change to static
+      climbLock = true;
+      climbMotor.set(-0.5); //TODO change to static
     }
-    else if(direction == 4 && !maxLimitSwitch.get()) //going down :(
+    else if(direction == 4 && !minLimitSwitch.get()) //going down :(
     {
       climbLock = false;
-      climbMotor.set(0.1);
+      climbMotor.set(0.5);
     }
     else
     {

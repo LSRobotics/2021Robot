@@ -7,8 +7,8 @@ package frc.robot.Constants;
 
 /** Add your docs here. */
 public class Statics {
-    public static int Wheel_FrontLeft = 3;
-    public static int Wheel_BackLeft = 0;
+    public static int Wheel_FrontLeft = 4;
+    public static int Wheel_BackLeft = 3;
     public static int Wheel_FrontRight = 1;
     public static int Wheel_BackRight = 2;
 
