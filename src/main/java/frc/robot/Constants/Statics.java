@@ -61,6 +61,6 @@ public class Statics {
     //AV (1Foot): 25777.8333
     //AV (1Inch): 2148.15278
 
-    public static double inchToSensorUnits;
+    public static double inchToSensorUnits = 2148.15278;
 
 }

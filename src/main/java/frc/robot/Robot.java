@@ -68,7 +68,8 @@ public class Robot extends TimedRobot implements PIDOutput {
   public VictorSPX intakeBottom;
   public VictorSPX intakeToShooter;
   public VictorSPX intakeFront;
-  public XboxController gp;
+  public XboxController gp1;
+  public XboxController gp2;
   public PowerDistributionPanel pdp;
 
   public Timer timer;
@@ -97,16 +98,23 @@ public class Robot extends TimedRobot implements PIDOutput {
 
   boolean climbLock = true;
 
+  boolean firstTime = true;
+
+  Timer autonTimer;
+
   @Override
   public void robotInit() {
-    gp = new XboxController(0);
+    gp1 = new XboxController(0);
+    gp2 = new XboxController(1);
+
+
 
     ballsPresent = 0;
     autonStage = 0;
     TargetAngle = -1;
     leftSpeed = 0;
     rightSpeed = 0;
-    speedModifier = Statics.lowModeModifier;
+    speedModifier = Statics.highModeModifier;
     shooter = new WPI_TalonFX(Statics.shooter);
     climbMotor = new WPI_TalonFX(Statics.climb_motor_id);
     intakeTop = new VictorSPX(Statics.intake_top);
@@ -115,6 +123,8 @@ public class Robot extends TimedRobot implements PIDOutput {
     intakeFront = new VictorSPX(Statics.intake_front);
 
     timer = new Timer();
+    autonTimer = new Timer();
+
 
     pdp = new PowerDistributionPanel(0);
     
@@ -133,7 +143,7 @@ public class Robot extends TimedRobot implements PIDOutput {
     IR = new AnalogInput(Statics.front_ir);
 
     pneumatic_intake.set(DoubleSolenoid.Value.kReverse);
-    pneumatic_ratchet.set(DoubleSolenoid.Value.kForward);
+    pneumatic_ratchet.set(DoubleSolenoid.Value.kReverse);
 
     shooter.configFactoryDefault();
     front_left.configFactoryDefault();
@@ -164,11 +174,24 @@ public class Robot extends TimedRobot implements PIDOutput {
 
   @Override
   public void autonomousInit() {
+    autonTimer.reset();
+  
   }
 
   @Override
   public void autonomousPeriodic() {
     
+    if (autonTimer.get() == 0) {
+      autonTimer.start();
+    }
+
+    if (autonTimer.get() < 2) {
+      driveMode.arcadeDrive(-.4,0);
+    }
+    else {
+      driveMode.arcadeDrive(0,0);
+    }
+
   }
 
   @Override
@@ -178,13 +201,14 @@ public class Robot extends TimedRobot implements PIDOutput {
   @Override
   public void teleopPeriodic() {
 
-    move(gp.getY(Hand.kLeft), gp.getX(Hand.kRight));
-    intake(Statics.intakeSpeed * toInt(gp.getAButton()));
-    shoot(Statics.shooterSpeed * toInt(gp.getBButton()));
-    if(gp.getXButtonPressed()) togglePneumaticIntake();
-    climb(DPadToInt(gp.getPOV()), gp.getBumperPressed(Hand.kRight));
+    move(gp1.getTriggerAxis(Hand.kRight),gp1.getTriggerAxis(Hand.kLeft),gp1.getX(Hand.kRight));
+    intake(Statics.intakeSpeed * toInt(gp2.getAButton()));
+    shoot(gp2.getBButton());
+    if(gp2.getXButtonPressed()) togglePneumaticIntake();
+    climb(DPadToInt(gp2.getPOV()), gp2.getBumperPressed(Hand.kRight));
     checkSpeedToggle();
     //diagnostics();
+
    
   }
 
@@ -220,7 +244,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 
   public void checkSpeedToggle()
   {
-    if(gp.getBumperPressed(Hand.kLeft))
+    if(gp1.getBumperPressed(Hand.kLeft))
     {
       if(speedModifier == Statics.highModeModifier)
       {
@@ -258,7 +282,7 @@ public class Robot extends TimedRobot implements PIDOutput {
       }
       else {
         gyroPIDController.calculate();
-        move(leftSpeed, rightSpeed);
+        move(leftSpeed, rightSpeed, 0.0);
       }
     }
     
@@ -291,18 +315,20 @@ public class Robot extends TimedRobot implements PIDOutput {
   
   public void changeClimbLock(boolean state) {
 
-    if (state && pneumatic_ratchet.get() != DoubleSolenoid.Value.kForward) { //is locked
+    if (state && pneumatic_ratchet.get() != DoubleSolenoid.Value.kReverse) { //is locked
       //lock the ratchet 
-      pneumatic_ratchet.set(DoubleSolenoid.Value.kForward);
-    }
-    else if (!state && pneumatic_ratchet.get() != DoubleSolenoid.Value.kReverse){ //isn't locked
-      //unlock the ratchet
       pneumatic_ratchet.set(DoubleSolenoid.Value.kReverse);
+    }
+    else if (!state && pneumatic_ratchet.get() != DoubleSolenoid.Value.kForward){ //isn't locked
+      //unlock the ratchet
+      pneumatic_ratchet.set(DoubleSolenoid.Value.kForward);
     }
 
   }
   
-  public void move(double throttle, double turn) {
+  public void move(double throttleForward, double throttleBackward, double turn) {
+    double throttle = throttleForward - throttleBackward;
+    
     if(Math.abs(throttle) <= Statics.stickDeadzone){
       throttle = 0;
     }
@@ -318,7 +344,33 @@ public class Robot extends TimedRobot implements PIDOutput {
 
   }
 
-  public void shoot(double speed) {
+  public void shoot(boolean shootButton) {
+
+
+    if (shootButton) {
+      shooter.set(ControlMode.PercentOutput, Statics.shooterSpeed);
+      
+      if (timer.get() == 0) {
+        timer.start();
+      }
+      
+    }
+    else {
+      timer.reset();
+      shooter.set(ControlMode.PercentOutput, 0.0);
+    }
+
+    if (timer.get() > 2.0) {
+      intakeToShooter.set(ControlMode.PercentOutput, 1);
+      intakeBottom.set(ControlMode.PercentOutput, -1);
+    }
+    else {
+      intakeToShooter.set(ControlMode.PercentOutput, 0.0);
+    }
+    
+  }
+
+  public void rev(double speed) {
     shooter.set(ControlMode.PercentOutput, speed);
   }
 
@@ -336,17 +388,16 @@ public class Robot extends TimedRobot implements PIDOutput {
     return angle / 45;
     
   }
-  
-  public void climb(int direction, boolean lockInput)
+  public void climb (int direction, boolean lockInput)
   {
     if (lockInput) {climbLock = !climbLock;}
 
-    if(direction == 0 && !maxLimitSwitch.get()) //going up!
+    if (direction == 0 && maxLimitSwitch.get()) //going up!
     {
-      climbLock = true;
+      climbLock = false;
       climbMotor.set(-0.5); //TODO change to static
     }
-    else if(direction == 4 && !minLimitSwitch.get()) //going down :(
+    else if (direction == 4 && !minLimitSwitch.get()) //going down :(
     {
       climbLock = false;
       climbMotor.set(0.5);
@@ -370,16 +421,22 @@ public class Robot extends TimedRobot implements PIDOutput {
         escape = true;
       }
       intakeFront.set(ControlMode.PercentOutput, -speed * 1.25);
+      intakeBottom.set(ControlMode.PercentOutput, -speed);
+      intakeTop.set(ControlMode.PercentOutput, -speed);
     }
     if(irVoltage > Statics.intakeIRThreshold && (timer.get() - startTime) > 2)
     {
       intakeFront.set(ControlMode.PercentOutput, 0);
+      intakeBottom.set(ControlMode.PercentOutput, 0);
+      intakeTop.set(ControlMode.PercentOutput, 0);
       escape = false;
     }
     else if(irVoltage < Statics.intakeIRThreshold)
     {
       intakeFront.set(ControlMode.PercentOutput, -speed * 1.25);
       startTime = 0;
+      intakeBottom.set(ControlMode.PercentOutput, -speed);
+      intakeTop.set(ControlMode.PercentOutput, -speed);
     }
      
   }
@@ -391,7 +448,7 @@ public class Robot extends TimedRobot implements PIDOutput {
     double speed = 0;
     if(ballsPresent == 3)
     {
-        speed = Statics.intakeSpeed * toInt(gp.getAButton());
+        speed = Statics.intakeSpeed * toInt(gp1.getAButton());
     }
     /*if(startTime != 0)
       {
@@ -403,9 +460,9 @@ public class Robot extends TimedRobot implements PIDOutput {
         ballsPresent = 0;
         speed = Statics.intakeSpeed;
       }
-      if(toInt(gp.getYButton()) != 0)
+      if(toInt(gp1.getYButton()) != 0)
       {
-      speed = -(Statics.intakeSpeed * toInt(gp.getYButton()));
+      speed = -(Statics.intakeSpeed * toInt(gp1.getYButton()));
       }
     return speed;
   }
@@ -415,7 +472,7 @@ public class Robot extends TimedRobot implements PIDOutput {
     boolean escape = false;
     double irVoltage = IR.getVoltage();
     double speed = 0;
-    if (irVoltage > Statics.intakeIRThreshold && toInt(gp.getYButton()) == 0)
+    if (irVoltage > Statics.intakeIRThreshold && toInt(gp1.getYButton()) == 0)
     {
       escape = true;
       switch(ballsPresent)
@@ -471,9 +528,9 @@ public class Robot extends TimedRobot implements PIDOutput {
         //BALLS ZERO IN BELTSHOOTER
         speed = -Statics.intakeSpeed;
       }
-      if(toInt(gp.getYButton()) != 0)
+      if(toInt(gp1.getYButton()) != 0)
       {
-      speed = (Statics.intakeSpeed * toInt(gp.getYButton()));
+      speed = (Statics.intakeSpeed * toInt(gp1.getYButton()));
       }
       
     return speed;
@@ -507,7 +564,7 @@ public class Robot extends TimedRobot implements PIDOutput {
     SmartDashboard.putBoolean("Compressor Running", mCompressor.getPressureSwitchValue());
     SmartDashboard.putBoolean("Compressor is Enabled", mCompressor.enabled());
 
-    SmartDashboard.putNumber("Direction", DPadToInt(gp.getPOV()));
+    SmartDashboard.putNumber("Direction", DPadToInt(gp1.getPOV()));
 
     SmartDashboard.putNumber("Intake Sensor", IR.getVoltage());
     SmartDashboard.putNumber("Balls Present", ballsPresent);
