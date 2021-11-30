@@ -6,7 +6,7 @@ This is the code for the 2021 FRC Robotics season
 ## Controls:
 
 gamepad1:
-* **Moving** - Arcade Drive
+* **Moving** - Arcade Drive (left stick to move forward and backwards. right stick to turn)
 
 gamepad2:
 * **Intake** - A Button
@@ -25,7 +25,7 @@ gamepad2:
 * Pixy2JavaAPI 1.4.1
 
 ## TODO
-* Update README
+* Update README libraries
 * Check Climb code since it was made at competition 
 * Update currently-deprecated autonomous systems 
 * Swap shooter system from using timers to using the built-in sensor's velocity
